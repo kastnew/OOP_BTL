@@ -1,0 +1,9 @@
+/* src/pages/Dashboard.css */
+.dashboard-container { padding: 20px; font-family: sans-serif; }
+.card-list { display: flex; gap: 20px; }
+.card { 
+    border: 1px solid #ccc; 
+    padding: 20px; 
+    border-radius: 8px; 
+    background: #f9f9f9;
+}

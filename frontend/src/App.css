@@ -1,0 +1,12 @@
+/* src/App.css */
+body { margin: 0; background-color: #f4f6f8; font-family: Arial, sans-serif; }
+
+.app-container {
+  display: flex; /* Xếp hàng ngang (Sidebar + Content) */
+}
+
+.main-content {
+  margin-left: 250px; /* Đẩy nội dung sang phải 250px để không bị Sidebar che mất */
+  width: calc(100% - 250px);
+  min-height: 100vh;
+}

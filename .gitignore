@@ -1,0 +1,15 @@
+# Chặn rác hệ thống
+.DS_Store
+.vscode/
+.idea/
+
+# Chặn rác Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Chặn rác Backend
+backend/target/
+backend/.mvn/
+backend/*.class
+backend/*.log

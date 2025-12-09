@@ -1,0 +1,26 @@
+/* src/pages/SleepTracker.css */
+.sleep-container { padding: 20px; min-height: 80vh; }
+
+.sleep-list { display: flex; flex-direction: column; gap: 15px; }
+
+.sleep-card {
+  display: flex;
+  align-items: center;
+  background: white; /* Hoặc để màu tối như #2c3e50 nếu thích dark mode */
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.sleep-icon { font-size: 40px; margin-right: 20px; }
+.sleep-info { flex: 1; }
+.sleep-info p { margin: 5px 0; color: #666; }
+
+.sleep-quality {
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  color: white;
+}
+.good { background-color: #8e44ad; } /* Màu tím cho giấc ngủ */
+.average { background-color: #95a5a6; }
