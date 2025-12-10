@@ -5,11 +5,6 @@ export const MOCK_ACTIVITIES = [
   { id: 3, name: "Gym", startTime: "18:00", endTime: "19:30", kcal: 450, date: "2024-04-01" },
 ];
 
-export const MOCK_MEDICAL_RECORDS = [
-  { id: 1, disease: "Tiểu đường type 2", status: "Đang điều trị", date: "2023-03-15", note: "Kiểm soát tốt" },
-  { id: 2, disease: "Dị ứng phấn hoa", status: "Cấp tính", date: "2024-01-10", note: "Tránh tiếp xúc hoa" }
-];
-
 // src/services/mockData.js
 
 // --- Dữ liệu Bảng Meal (Bữa ăn) ---
@@ -24,4 +19,50 @@ export const MOCK_MEALS = [
 export const MOCK_SLEEP = [
   { id: 1, sleepTime: "22:30 01/04", wakeTime: "06:30 02/04", quality: "Tốt", type: "Giấc đêm" },
   { id: 2, sleepTime: "13:00 02/04", wakeTime: "13:45 02/04", quality: "Trung bình", type: "Giấc trưa" },
+];
+
+// src/services/mockData.js
+
+export const MOCK_MEDICAL_RECORDS = [
+  { 
+    id: 1, 
+    diseaseName: "Tiểu đường type 2", 
+    diseaseType: "Mãn tính", 
+    severity: "Nhẹ", 
+    status: "Đang điều trị", 
+    diagnosisDate: "2023-03-15", 
+    notes: "Kiểm soát đường huyết tốt" 
+  },
+  { 
+    id: 2, 
+    diseaseName: "Viêm phế quản", 
+    diseaseType: "Cấp tính", 
+    severity: "Trung bình", 
+    status: "Đã khỏi", 
+    diagnosisDate: "2024-01-10", 
+    notes: "Đã dùng kháng sinh 2 tuần" 
+  }
+];
+
+export const USERS = [
+  {
+    userId: 1,
+    firstName: "Nguyễn Văn",
+    lastName: "An",
+    age: 28,
+    gender: "Nam"
+  }
+];
+
+export const HEALTH_INDICATORS = [
+  {
+    indicatorId: 1,
+    userId: 1,
+    height: 1.75,       // Đơn vị mét
+    weight: 70,         // Đơn vị kg
+    bloodPressure: "120/80",
+    heartRate: 75,
+    bmi: 22.86,
+    healthStatus: "Bình thường"
+  }
 ];

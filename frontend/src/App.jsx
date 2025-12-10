@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import './App.css'; // Kết nối file CSS bạn đã sửa
 import Nutrition from './pages/Nutrition';
 import SleepTracker from './pages/SleepTracker';
+import MedicalRecords from './pages/MedicalRecords';
 
 function App() {
   return (
@@ -23,7 +24,7 @@ function App() {
             <Route path="/activities" element={<Activities />} />
             <Route path="/nutrition" element={<Nutrition />} />
             <Route path="/sleep" element={<SleepTracker />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/medical-records" element={<MedicalRecords />} />
           </Routes>
         </div>
       </div>

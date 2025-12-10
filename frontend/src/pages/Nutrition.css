@@ -1,34 +1,103 @@
 /* src/pages/Nutrition.css */
-.nutrition-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.page-container { padding: 20px; position: relative; min-height: 80vh; }
+
+.nutrition-header-top {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
 }
 
 .total-box {
-  background: #27ae60;
-  color: white;
-  padding: 15px 25px;
-  border-radius: 10px;
-  text-align: right;
+  background: #27ae60; color: white; padding: 10px 20px;
+  border-radius: 20px; text-align: right;
+  box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2);
 }
+.total-box span { font-size: 12px; display: block; }
+.total-box strong { font-size: 20px; }
 
-.big-number { display: block; font-size: 24px; font-weight: bold; }
-
-.meal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-
+/* --- 1. Style Danh Sách --- */
 .meal-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  border-top: 5px solid #27ae60;
+  background: white; padding: 15px; margin-bottom: 12px;
+  border-radius: 12px; display: flex;
+  justify-content: space-between; align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border-left: 5px solid #27ae60; /* Viền xanh lá */
 }
 
-.meal-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-.meal-header h3 { margin: 0; font-size: 18px; }
+.meal-info { flex: 1; }
 
-.tag { font-size: 12px; padding: 4px 8px; border-radius: 4px; background: #eee; }
+.meal-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.meal-title-row h3 { margin: 0; font-size: 16px; color: #333; }
 
-.nutrient-info p { margin: 5px 0; color: #555; font-size: 14px; }
+.meal-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #eee; color: #555; }
+
+.meal-details { font-size: 13px; color: #7f8c8d; display: flex; gap: 10px; }
+
+.meal-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+.calo-badge {
+  background: #e8f5e9; color: #27ae60;
+  font-size: 12px; padding: 3px 8px; border-radius: 10px; font-weight: bold;
+}
+
+/* Tái sử dụng style nút bấm từ trang Activities */
+.action-buttons { display: flex; gap: 8px; }
+
+.btn-icon {
+  border: none; width: 30px; height: 30px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
+}
+.edit { background: #e3f2fd; color: #1976d2; }
+.delete { background: #ffebee; color: #d32f2f; }
+.btn-icon:hover { transform: scale(1.1); }
+
+/* --- 2. Nút Trôi Dấu Cộng (FAB) - Phiên bản Xanh --- */
+.fab-btn {
+  position: fixed; bottom: 30px; right: 30px;
+  width: 60px; height: 60px; border-radius: 50%;
+  font-size: 30px; border: none; color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s;
+}
+.fab-green { background-color: #27ae60; }
+.fab-btn:hover { transform: scale(1.1) rotate(90deg); }
+
+/* --- 3. Cửa Sổ Bật Lên (Modal) - Dùng chung logic --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; animation: fadeIn 0.3s;
+}
+
+.modal-content {
+  background: white; padding: 25px;
+  border-radius: 15px; width: 90%; max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s;
+}
+
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #aaa; }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600; color: #555; }
+.form-group input, .form-group select {
+  width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; }
+
+.btn-save-modal {
+  width: 100%; padding: 12px; color: white;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;
+}
+.btn-green { background: #27ae60; }
+.btn-green:hover { background: #219150; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

@@ -1,26 +1,88 @@
 /* src/pages/SleepTracker.css */
-.sleep-container { padding: 20px; min-height: 80vh; }
+.page-container { padding: 20px; position: relative; min-height: 80vh; }
 
-.sleep-list { display: flex; flex-direction: column; gap: 15px; }
-
+/* --- 1. Style Danh Sách --- */
 .sleep-card {
-  display: flex;
+  background: white; padding: 20px; margin-bottom: 15px;
+  border-radius: 15px; display: flex;
   align-items: center;
-  background: white; /* Hoặc để màu tối như #2c3e50 nếu thích dark mode */
-  padding: 20px;
-  border-radius: 15px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-left: 5px solid #8e44ad; /* Viền tím */
 }
 
-.sleep-icon { font-size: 40px; margin-right: 20px; }
+.sleep-icon { font-size: 35px; margin-right: 20px; }
+
 .sleep-info { flex: 1; }
-.sleep-info p { margin: 5px 0; color: #666; }
+.sleep-info h3 { margin: 0 0 5px 0; color: #333; font-size: 18px; }
+.sleep-info p { margin: 2px 0; color: #666; font-size: 14px; }
 
-.sleep-quality {
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-weight: bold;
-  color: white;
+.sleep-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+
+.quality-badge {
+  padding: 5px 12px; border-radius: 20px; 
+  font-weight: bold; font-size: 12px; color: white;
 }
-.good { background-color: #8e44ad; } /* Màu tím cho giấc ngủ */
-.average { background-color: #95a5a6; }
+.q-good { background-color: #27ae60; } /* Xanh lá */
+.q-avg { background-color: #f39c12; }  /* Vàng */
+.q-bad { background-color: #c0392b; }  /* Đỏ */
+
+/* Tái sử dụng style nút bấm */
+.action-buttons { display: flex; gap: 8px; }
+
+.btn-icon {
+  border: none; width: 32px; height: 32px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
+}
+.edit { background: #e3f2fd; color: #1976d2; }
+.delete { background: #ffebee; color: #d32f2f; }
+.btn-icon:hover { transform: scale(1.1); }
+
+/* --- 2. Nút Trôi Dấu Cộng (FAB) - Phiên bản Tím --- */
+.fab-btn {
+  position: fixed; bottom: 30px; right: 30px;
+  width: 60px; height: 60px; border-radius: 50%;
+  font-size: 30px; border: none; color: white;
+  box-shadow: 0 4px 10px rgba(142, 68, 173, 0.4);
+  cursor: pointer; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s;
+}
+.fab-purple { background-color: #8e44ad; }
+.fab-btn:hover { transform: scale(1.1) rotate(90deg); background-color: #71368a; }
+
+/* --- 3. Cửa Sổ Bật Lên (Modal) --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; animation: fadeIn 0.3s;
+}
+
+.modal-content {
+  background: white; padding: 25px;
+  border-radius: 15px; width: 90%; max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s;
+}
+
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #aaa; }
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600; color: #555; }
+.form-group input, .form-group select {
+  width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+  box-sizing: border-box; font-family: inherit;
+}
+
+.btn-save-modal {
+  width: 100%; padding: 12px; color: white;
+  border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;
+}
+.btn-purple { background: #8e44ad; }
+.btn-purple:hover { background: #71368a; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
