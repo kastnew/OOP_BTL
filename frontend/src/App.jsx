@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Activities from './pages/Activities';
-import Profile from './pages/Profile';
 import './App.css'; // Kết nối file CSS bạn đã sửa
 import Nutrition from './pages/Nutrition';
 import SleepTracker from './pages/SleepTracker';

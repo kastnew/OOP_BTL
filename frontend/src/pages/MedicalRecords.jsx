@@ -5,12 +5,10 @@ import './MedicalRecords.css';
 
 const MedicalRecords = () => {
   const [records, setRecords] = useState([]);
-
-  // State điều khiển Modal
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // State Form nhập liệu (Theo đúng cột trong Database)
+  // Form data giữ nguyên như cũ
   const [formData, setFormData] = useState({
     diseaseName: '',
     diseaseType: '',
@@ -24,8 +22,7 @@ const MedicalRecords = () => {
     setRecords(MOCK_MEDICAL_RECORDS);
   }, []);
 
-  // --- CÁC HÀM ĐIỀU KHIỂN ---
-
+  // --- GIỮ NGUYÊN CÁC HÀM LOGIC (Copy từ bài cũ hoặc giữ nguyên nếu chưa xóa) ---
   const handleOpenAdd = () => {
     setEditingId(null);
     setFormData({ diseaseName: '', diseaseType: '', severity: 'Nhẹ', status: 'Đang điều trị', diagnosisDate: '', notes: '' });
@@ -45,9 +42,7 @@ const MedicalRecords = () => {
     setShowModal(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
+  const handleCloseModal = () => setShowModal(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,19 +51,13 @@ const MedicalRecords = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (editingId) {
-      // SỬA
       const updatedList = records.map((item) => 
         item.id === editingId ? { ...item, ...formData } : item
       );
       setRecords(updatedList);
     } else {
-      // THÊM MỚI
-      const newItem = {
-        id: Date.now(),
-        ...formData
-      };
+      const newItem = { id: Date.now(), ...formData };
       setRecords([...records, newItem]);
     }
     handleCloseModal();
@@ -84,44 +73,47 @@ const MedicalRecords = () => {
     <div className="page-container">
       <h1>🏥 Bệnh Án Điện Tử</h1>
 
-      {/* DANH SÁCH BỆNH ÁN */}
       <div className="record-list">
         {records.map((item) => (
-          <div key={item.id} className="record-card">
-            <div className="record-header">
-              <div className="header-left">
+          <div key={item.id} className="record-card compact-card">
+            
+            {/* DÒNG 1: Tên bệnh + Nút Sửa/Xóa (Đã đưa lên đây) */}
+            <div className="card-top-row">
+              <div className="title-group">
                 <h3>{item.diseaseName}</h3>
                 <span className="type-tag">{item.diseaseType}</span>
               </div>
+              
+              <div className="action-buttons-top">
+                <button className="btn-icon edit" onClick={() => handleOpenEdit(item)}>✎</button>
+                <button className="btn-icon delete" onClick={() => handleDelete(item.id)}>🗑️</button>
+              </div>
+            </div>
+
+            {/* DÒNG 2: Các badge trạng thái */}
+            <div className="card-badges-row">
               <span className={`severity-badge ${item.severity === 'Nặng' ? 'sv-high' : item.severity === 'Trung bình' ? 'sv-med' : 'sv-low'}`}>
-                Mức độ: {item.severity}
+                {item.severity}
+              </span>
+              <span className={`status-text ${item.status === 'Đã khỏi' ? 'st-done' : 'st-active'}`}>
+                {item.status}
               </span>
             </div>
 
-            <div className="record-body">
-              <p>📅 Ngày chẩn đoán: <strong>{item.diagnosisDate}</strong></p>
-              <p>📝 Ghi chú: {item.notes}</p>
-              <div className="status-row">
-                Trạng thái: 
-                <span className={`status-text ${item.status === 'Đã khỏi' ? 'st-done' : 'st-active'}`}>
-                   {item.status}
-                </span>
-              </div>
+            {/* DÒNG 3: Thông tin chi tiết (Ngày + Ghi chú) */}
+            <div className="card-details">
+              <p className="date-info">📅 {item.diagnosisDate}</p>
+              {item.notes && <p className="note-info">📝 {item.notes}</p>}
             </div>
-            
-            <div className="record-actions">
-               <button className="btn-icon edit" onClick={() => handleOpenEdit(item)}>✎ Sửa</button>
-               <button className="btn-icon delete" onClick={() => handleDelete(item.id)}>🗑️ Xóa</button>
-            </div>
+
           </div>
         ))}
         {records.length === 0 && <p style={{textAlign: 'center'}}>Chưa có hồ sơ bệnh án nào.</p>}
       </div>
 
-      {/* NÚT TRÒN (FAB) MÀU ĐỎ */}
       <button className="fab-btn fab-red" onClick={handleOpenAdd}>+</button>
 
-      {/* MODAL NHẬP LIỆU */}
+      {/* --- PHẦN MODAL GIỮ NGUYÊN KHÔNG ĐỔI --- */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -129,24 +121,21 @@ const MedicalRecords = () => {
               <h3>{editingId ? 'Cập Nhật Bệnh Án' : 'Thêm Bệnh Án Mới'}</h3>
               <button className="close-btn" onClick={handleCloseModal}>&times;</button>
             </div>
-            
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Tên bệnh</label>
-                <input type="text" name="diseaseName" value={formData.diseaseName} onChange={handleInputChange} required placeholder="Ví dụ: Viêm dạ dày..." />
+                <input type="text" name="diseaseName" value={formData.diseaseName} onChange={handleInputChange} required />
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                     <label>Loại bệnh</label>
-                    <input type="text" name="diseaseType" value={formData.diseaseType} onChange={handleInputChange} placeholder="Cấp tính/Mãn tính" />
+                    <input type="text" name="diseaseType" value={formData.diseaseType} onChange={handleInputChange} placeholder="VD: Mãn tính" />
                 </div>
                 <div className="form-group">
                     <label>Ngày chẩn đoán</label>
                     <input type="date" name="diagnosisDate" value={formData.diagnosisDate} onChange={handleInputChange} required />
                 </div>
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label>Mức độ</label>
@@ -167,18 +156,10 @@ const MedicalRecords = () => {
                   </select>
                 </div>
               </div>
-
               <div className="form-group">
-                <label>Ghi chú / Đơn thuốc</label>
-                <textarea 
-                    name="notes" 
-                    value={formData.notes} 
-                    onChange={handleInputChange} 
-                    rows="3"
-                    style={{width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd'}}
-                ></textarea>
+                <label>Ghi chú</label>
+                <textarea name="notes" value={formData.notes} onChange={handleInputChange} rows="2" style={{width: '100%', padding:'10px', borderRadius:'8px', border:'1px solid #ddd'}}></textarea>
               </div>
-
               <button type="submit" className="btn-save-modal btn-red">Lưu Hồ Sơ</button>
             </form>
           </div>

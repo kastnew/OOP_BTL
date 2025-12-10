@@ -10,7 +10,7 @@ const Sidebar = () => {
         <h2>HealthApp 🩺</h2>
       </div>
       <nav className="menu">
-        <Link to="/" className="menu-item">🏠 Tổng quan & Cá nhân</Link>
+        <Link to="/" className="menu-item">🏠 Tổng quan</Link>
         <Link to="/activities" className="menu-item">🏃 Hoạt động</Link>
         <Link to="/nutrition" className="menu-item">🥗 Dinh dưỡng</Link>
         <Link to="/sleep" className="menu-item">🌙 Giấc ngủ</Link>
