@@ -69,4 +69,28 @@
 .calendar-nav button:hover {
   background: #2980b9;
 }
+/* ===== C - ĐÁNH DẤU NGÀY CÓ DỮ LIỆU ===== */
+
+.calendar-day.day-activity {
+  background: #e3f2fd;
+  border: 1px solid #64b5f6;
+}
+
+.calendar-day.day-meal {
+  background: #e8f5e9;
+  border: 1px solid #66bb6a;
+}
+
+.calendar-day.day-both {
+  background: #ede7f6;
+  border: 1px solid #9575cd;
+}
+
+/* Hover đẹp hơn */
+.calendar-day.day-activity:hover,
+.calendar-day.day-meal:hover,
+.calendar-day.day-both:hover {
+  transform: scale(1.05);
+  cursor: pointer;
+}
 
