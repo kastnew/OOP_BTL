@@ -5,105 +5,114 @@ import './Calendar.css';
 const Calendar = () => {
   const today = new Date();
 
-  // ✅ STATE THÁNG / NĂM
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-11
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth()); // 0–11
+  const [selectedDate, setSelectedDate] = useState(null);
 
-  const [selectedDate, setSelectedDate] = useState(
-    today.toISOString().split('T')[0]
-  );
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 = CN
 
-  // 👉 SỐ NGÀY TRONG THÁNG
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  // ====== B: LỌC DỮ LIỆU THEO NGÀY ======
+  const activitiesOfDay = selectedDate
+    ? MOCK_ACTIVITIES.filter(a => a.date === selectedDate)
+    : [];
 
-  // 👉 CHUYỂN THÁNG
-  const handlePrevMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
+  const mealsOfDay = selectedDate
+    ? MOCK_MEALS.filter(m => m.date === selectedDate)
+    : [];
 
-  const handleNextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  // 👉 LỌC DỮ LIỆU THEO NGÀY
-  const activitiesOfDay = MOCK_ACTIVITIES.filter(
-    a => a.date === selectedDate
-  );
-
-  const mealsOfDay = MOCK_MEALS.filter(
-    m => m.date === selectedDate
-  );
-
-  const kcalOut = activitiesOfDay.reduce(
+  const totalOut = activitiesOfDay.reduce(
     (sum, a) => sum + Number(a.kcal || 0), 0
   );
 
-  const kcalIn = mealsOfDay.reduce(
+  const totalIn = mealsOfDay.reduce(
     (sum, m) => sum + Number(m.calories || 0), 0
   );
 
+  // ====== ĐIỀU HƯỚNG THÁNG ======
+  const prevMonth = () => {
+    if (month === 0) {
+      setMonth(11);
+      setYear(y => y - 1);
+    } else {
+      setMonth(m => m - 1);
+    }
+    setSelectedDate(null);
+  };
+
+  const nextMonth = () => {
+    if (month === 11) {
+      setMonth(0);
+      setYear(y => y + 1);
+    } else {
+      setMonth(m => m + 1);
+    }
+    setSelectedDate(null);
+  };
+
+  // ====== RENDER NGÀY ======
+  const renderDays = () => {
+    const cells = [];
+
+    // Ô trống đầu tháng
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      cells.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
+    }
+
+    // Ngày trong tháng
+    for (let day = 1; day <= daysInMonth; day++) {
+      const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      cells.push(
+        <div
+          key={day}
+          className={`calendar-day ${selectedDate === fullDate ? 'selected' : ''}`}
+          onClick={() => setSelectedDate(fullDate)}
+        >
+          {day}
+        </div>
+      );
+    }
+
+    return cells;
+  };
+
   return (
-    <div className="calendar-page">
+    <div className="page-container">
       <h1>📅 Lịch Hoạt Động & Dinh Dưỡng</h1>
 
-      {/* ==== ĐIỀU HƯỚNG THÁNG ==== */}
-      <div className="calendar-nav">
-        <button onClick={handlePrevMonth}>◀</button>
-        <span>
-          Tháng {currentMonth + 1} / {currentYear}
-        </span>
-        <button onClick={handleNextMonth}>▶</button>
+      {/* HEADER THÁNG */}
+      <div className="calendar-header">
+        <button onClick={prevMonth}>◀</button>
+        <h2>
+          {month + 1}/{year}
+        </h2>
+        <button onClick={nextMonth}>▶</button>
       </div>
 
-      {/* ==== LỊCH ==== */}
+      {/* THỨ */}
+      <div className="calendar-weekdays">
+        <div>CN</div><div>T2</div><div>T3</div>
+        <div>T4</div><div>T5</div><div>T6</div><div>T7</div>
+      </div>
+
+      {/* LỊCH */}
       <div className="calendar-grid">
-        {[...Array(daysInMonth)].map((_, i) => {
-          const day = i + 1;
-          const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-          return (
-            <div
-              key={day}
-              className={`calendar-cell ${dateStr === selectedDate ? 'active' : ''}`}
-              onClick={() => setSelectedDate(dateStr)}
-            >
-              {day}
-            </div>
-          );
-        })}
+        {renderDays()}
       </div>
 
-      {/* ==== THỐNG KÊ NGÀY ==== */}
-      <div className="day-summary">
-        <h2>📌 Ngày {selectedDate}</h2>
-        <p>🔥 Kcal tiêu hao: <strong>{kcalOut}</strong></p>
-        <p>🍽 Kcal nạp vào: <strong>{kcalIn}</strong></p>
-      </div>
-
-      {/* ==== CHI TIẾT ==== */}
-      <div className="day-details">
-        <div>
-          <h3>🏃 Hoạt động</h3>
-          {activitiesOfDay.map(a => (
-            <div key={a.id} className="detail-item">
-              {a.name} – {a.kcal} kcal
-            </div>
-          ))}
-          {activitiesOfDay.length === 0 && <p>Không có hoạt động</p>}
+      {/* ====== B: THỐNG KÊ NGÀY ====== */}
+      {selectedDate && (
+        <div className="day-summary">
+          <h3>📊 Ngày {selectedDate}</h3>
+          <p>🔥 Kcal tiêu hao: <strong>{totalOut}</strong></p>
+          <p>🍽️ Kcal nạp: <strong>{totalIn}</strong></p>
+          <p>⚖️ Chênh lệch: <strong>{totalIn - totalOut}</strong></p>
         </div>
+      )}
+    </div>
+  );
+};
 
-        <div>
-          <h3>🥗 Dinh dưỡng</h3>
-          {mealsOfDay.map(m => (
-            <div key={m.id} className="detail-item">
-              {m.di
+export default Calendar;
+
