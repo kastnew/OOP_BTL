@@ -7,11 +7,9 @@ const Nutrition = () => {
   const [meals, setMeals] = useState([]);
   const [totalCalories, setTotalCalories] = useState(0);
 
-  // State điều khiển Modal
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // State Form nhập liệu
   const [formData, setFormData] = useState({
     dishName: '',
     type: 'Bữa sáng',
@@ -21,22 +19,36 @@ const Nutrition = () => {
     sugar: ''
   });
 
-  // Load dữ liệu và tính tổng calo
+  // 👉 NGÀY HÔM NAY
+  const today = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     setMeals(MOCK_MEALS);
   }, []);
 
+  // 👉 CHỈ LẤY MÓN ĂN HÔM NAY
+  const mealsToday = meals.filter(item => item.date === today);
+
+  // 👉 TỔNG KCAL HÔM NAY
   useEffect(() => {
-    // Tự động tính tổng calo mỗi khi danh sách món ăn thay đổi
-    const total = meals.reduce((sum, item) => sum + Number(item.calories || 0), 0);
+    const total = mealsToday.reduce(
+      (sum, item) => sum + Number(item.calories || 0),
+      0
+    );
     setTotalCalories(total);
-  }, [meals]);
+  }, [mealsToday]);
 
-  // --- CÁC HÀM ĐIỀU KHIỂN ---
-
+  // --- ĐIỀU KHIỂN MODAL ---
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ dishName: '', type: 'Bữa sáng', calories: '', protein: '', fat: '', sugar: '' });
+    setFormData({
+      dishName: '',
+      type: 'Bữa sáng',
+      calories: '',
+      protein: '',
+      fat: '',
+      sugar: ''
+    });
     setShowModal(true);
   };
 
@@ -53,9 +65,7 @@ const Nutrition = () => {
     setShowModal(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
+  const handleCloseModal = () => setShowModal(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -66,25 +76,24 @@ const Nutrition = () => {
     e.preventDefault();
 
     if (editingId) {
-      // SỬA
-      const updatedList = meals.map((item) => 
+      const updated = meals.map(item =>
         item.id === editingId ? { ...item, ...formData } : item
       );
-      setMeals(updatedList);
+      setMeals(updated);
     } else {
-      // THÊM MỚI
       const newItem = {
         id: Date.now(),
         ...formData,
-        date: new Date().toISOString().split('T')[0]
+        date: today
       };
       setMeals([...meals, newItem]);
     }
+
     handleCloseModal();
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("Bạn muốn xóa món này khỏi thực đơn?")) {
+    if (window.confirm("Bạn muốn xóa món này?")) {
       setMeals(meals.filter(item => item.id !== id));
     }
   };
@@ -94,45 +103,49 @@ const Nutrition = () => {
       <div className="nutrition-header-top">
         <h1>🥗 Nhật Ký Dinh Dưỡng</h1>
         <div className="total-box">
-          <span>Đã nạp:</span>
+          <span>Đã nạp hôm nay:</span>
           <strong>{totalCalories} kcal</strong>
         </div>
       </div>
 
-      {/* DANH SÁCH MÓN ĂN */}
+      {/* DANH SÁCH MÓN ĂN HÔM NAY */}
       <div className="meal-list">
-        {meals.map((item) => (
+        {mealsToday.map((item) => (
           <div key={item.id} className="meal-card">
             <div className="meal-info">
               <div className="meal-title-row">
                 <h3>{item.dishName}</h3>
-                <span className={`meal-tag ${item.type === 'Bữa sáng' ? 'tag-morning' : 'tag-default'}`}>
-                  {item.type}
-                </span>
+                <span className="meal-tag">{item.type}</span>
               </div>
               <div className="meal-details">
-                <span>🥩 Đạm: {item.protein}g</span>
-                <span>💧 Béo: {item.fat}g</span>
-                <span>🍬 Đường: {item.sugar}g</span>
+                <span>🥩 {item.protein}g</span>
+                <span>💧 {item.fat}g</span>
+                <span>🍬 {item.sugar}g</span>
               </div>
             </div>
-            
+
             <div className="meal-right">
               <span className="calo-badge">⚡ {item.calories} kcal</span>
-              <div className="action-buttons">
-                <button className="btn-icon edit" onClick={() => handleOpenEdit(item)}>✎</button>
-                <button className="btn-icon delete" onClick={() => handleDelete(item.id)}>🗑️</button>
-              </div>
+
+              {/* 👉 CHỈ SỬA / XÓA HÔM NAY */}
+              {item.date === today && (
+                <div className="action-buttons">
+                  <button className="btn-icon edit" onClick={() => handleOpenEdit(item)}>✎</button>
+                  <button className="btn-icon delete" onClick={() => handleDelete(item.id)}>🗑️</button>
+                </div>
+              )}
             </div>
           </div>
         ))}
-        {meals.length === 0 && <p style={{textAlign: 'center'}}>Chưa có món ăn nào.</p>}
+
+        {mealsToday.length === 0 && (
+          <p style={{ textAlign: 'center' }}>Hôm nay chưa có món ăn nào.</p>
+        )}
       </div>
 
-      {/* NÚT TRÒN (FAB) */}
       <button className="fab-btn fab-green" onClick={handleOpenAdd}>+</button>
 
-      {/* MODAL NHẬP LIỆU */}
+      {/* MODAL */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -140,14 +153,16 @@ const Nutrition = () => {
               <h3>{editingId ? 'Sửa Món Ăn' : 'Thêm Món Mới'}</h3>
               <button className="close-btn" onClick={handleCloseModal}>&times;</button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Tên món ăn</label>
-                <input 
-                  type="text" name="dishName" 
-                  value={formData.dishName} onChange={handleInputChange} 
-                  placeholder="Ví dụ: Phở bò" required 
+                <input
+                  type="text"
+                  name="dishName"
+                  value={formData.dishName}
+                  onChange={handleInputChange}
+                  required
                 />
               </div>
 
@@ -163,11 +178,16 @@ const Nutrition = () => {
                 </div>
                 <div className="form-group">
                   <label>Calo (kcal)</label>
-                  <input type="number" name="calories" value={formData.calories} onChange={handleInputChange} required />
+                  <input
+                    type="number"
+                    name="calories"
+                    value={formData.calories}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
               </div>
 
-              {/* Nhập chi tiết dinh dưỡng */}
               <div className="form-row">
                 <div className="form-group">
                   <label>Đạm (g)</label>
@@ -183,7 +203,9 @@ const Nutrition = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-save-modal btn-green">Lưu Thực Đơn</button>
+              <button type="submit" className="btn-save-modal btn-green">
+                Lưu Thực Đơn
+              </button>
             </form>
           </div>
         </div>
