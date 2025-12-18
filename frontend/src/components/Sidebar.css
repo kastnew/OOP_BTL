@@ -26,3 +26,9 @@
 }
 
 .menu-item:hover { background-color: #34495e; }
+/* ===== MENU ACTIVE ===== */
+.menu-item.active {
+  background-color: #1abc9c;
+  color: white;
+  font-weight: bold;
+}
