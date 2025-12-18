@@ -1,5 +1,5 @@
 // src/App.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import Sidebar from './components/Sidebar';
@@ -8,24 +8,65 @@ import Activities from './pages/Activities';
 import Nutrition from './pages/Nutrition';
 import SleepTracker from './pages/SleepTracker';
 import MedicalRecords from './pages/MedicalRecords';
-import Calendar from './pages/Calendar'; // ✅ THÊM
+import Calendar from './pages/Calendar';
 
-import './App.css'; // giữ nguyên
+import { MOCK_ACTIVITIES, MOCK_MEALS } from './services/mockData';
+import './App.css';
 
 function App() {
+  // ⭐ STATE DÙNG CHUNG
+  const [activities, setActivities] = useState(MOCK_ACTIVITIES);
+  const [meals, setMeals] = useState(MOCK_MEALS);
+
   return (
     <BrowserRouter>
       <div className="app-container">
-        {/* Thanh Menu bên trái */}
         <Sidebar />
 
-        {/* Nội dung chính */}
         <div className="main-content">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/activities" element={<Activities />} />
-            <Route path="/nutrition" element={<Nutrition />} />
-            <Route path="/calendar" element={<Calendar />} /> {/* ✅ THÊM */}
+            <Route
+              path="/"
+              element={
+                <Dashboard
+                  activities={activities}
+                  meals={meals}
+                />
+              }
+            />
+
+            <Route
+              path="/activities"
+              element={
+                <Activities
+                  activities={activities}
+                  setActivities={setActivities}
+                />
+              }
+            />
+
+            <Route
+              path="/nutrition"
+              element={
+                <Nutrition
+                  meals={meals}
+                  setMeals={setMeals}
+                />
+              }
+            />
+
+            <Route
+              path="/calendar"
+              element={
+                <Calendar
+                  activities={activities}
+                  setActivities={setActivities}
+                  meals={meals}
+                  setMeals={setMeals}
+                />
+              }
+            />
+
             <Route path="/sleep" element={<SleepTracker />} />
             <Route path="/medical-records" element={<MedicalRecords />} />
           </Routes>
