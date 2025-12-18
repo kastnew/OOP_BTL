@@ -100,29 +100,6 @@
 .form-group input, .form-group select { 
   width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; 
 }
-/* --- Nút điều hướng sang Calendar --- */
-.calendar-link-wrapper {
-  margin-top: 25px;
-  text-align: right;
-}
-
-.btn-calendar {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: #34495e;
-  color: white;
-  border-radius: 10px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: 0.2s;
-}
-
-.btn-calendar:hover {
-  background: #2c3e50;
-  transform: translateY(-2px);
-}
 .form-row { display: flex; gap: 15px; } .form-row .form-group { flex: 1; }
 
 .btn-save-modal { width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
