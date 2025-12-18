@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -11,15 +11,29 @@ const Sidebar = () => {
       </div>
 
       <nav className="menu">
-        <Link to="/" className="menu-item">🏠 Tổng quan</Link>
-        <Link to="/activities" className="menu-item">🏃 Hoạt động</Link>
-        <Link to="/nutrition" className="menu-item">🥗 Dinh dưỡng</Link>
+        <NavLink to="/" end className="menu-item">
+          🏠 Tổng quan
+        </NavLink>
 
-        {/* ✅ CHỈ THÊM DÒNG NÀY */}
-        <Link to="/calendar" className="menu-item">📅 Lịch</Link>
+        <NavLink to="/activities" className="menu-item">
+          🏃 Hoạt động
+        </NavLink>
 
-        <Link to="/sleep" className="menu-item">🌙 Giấc ngủ</Link>
-        <Link to="/medical-records" className="menu-item">🏥 Bệnh án điện tử</Link>
+        <NavLink to="/nutrition" className="menu-item">
+          🥗 Dinh dưỡng
+        </NavLink>
+
+        <NavLink to="/calendar" className="menu-item">
+          📅 Lịch
+        </NavLink>
+
+        <NavLink to="/sleep" className="menu-item">
+          🌙 Giấc ngủ
+        </NavLink>
+
+        <NavLink to="/medical-records" className="menu-item">
+          🏥 Bệnh án điện tử
+        </NavLink>
       </nav>
     </div>
   );
