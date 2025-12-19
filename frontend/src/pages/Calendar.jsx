@@ -1,16 +1,41 @@
 // src/pages/Calendar.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './Calendar.css';
 
 const Calendar = ({ activities = [], meals = [] }) => {
-  const today = new Date();
+
+  /* ======================
+     A – ĐỒNG BỘ NGÀY HIỆN TẠI
+  ====================== */
+  const getTodayStr = () => new Date().toISOString().split('T')[0];
+
+  const [todayStr, setTodayStr] = useState(getTodayStr());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTodayStr(getTodayStr());
+    }, 60 * 1000); // cập nhật mỗi phút
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const todayDate = new Date(todayStr);
 
   const [currentMonth, setCurrentMonth] = useState(
-    new Date(today.getFullYear(), today.getMonth(), 1)
+    new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
   );
-  const [selectedDate, setSelectedDate] = useState(
-    today.toISOString().split('T')[0]
-  );
+
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+
+  // Khi sang ngày mới → tự chọn ngày mới nếu đang xem tháng hiện tại
+  useEffect(() => {
+    const y = currentMonth.getFullYear();
+    const m = currentMonth.getMonth();
+
+    if (y === todayDate.getFullYear() && m === todayDate.getMonth()) {
+      setSelectedDate(todayStr);
+    }
+  }, [todayStr]);
 
   /* ======================
      B – TÍNH KCal TRONG NGÀY
@@ -81,11 +106,16 @@ const Calendar = ({ activities = [], meals = [] }) => {
 
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const selected = dateStr === selectedDate;
+            const isToday = dateStr === todayStr;
 
             return (
               <div
                 key={i}
-                className={`calendar-cell ${getDayClass(dateStr)} ${selected ? 'selected' : ''}`}
+                className={`calendar-cell 
+                  ${getDayClass(dateStr)} 
+                  ${selected ? 'selected' : ''} 
+                  ${isToday ? 'today' : ''}
+                `}
                 onClick={() => setSelectedDate(dateStr)}
               >
                 <span>{day}</span>
