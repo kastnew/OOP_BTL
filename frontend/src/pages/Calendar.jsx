@@ -1,18 +1,21 @@
 // src/pages/Calendar.jsx
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './Calendar.css';
 
 const Calendar = ({ activities = [], meals = [] }) => {
-  const navigate = useNavigate();
 
+  /* ======================
+     A – ĐỒNG BỘ NGÀY HIỆN TẠI
+  ====================== */
   const getTodayStr = () => new Date().toISOString().split('T')[0];
+
   const [todayStr, setTodayStr] = useState(getTodayStr());
 
   useEffect(() => {
     const timer = setInterval(() => {
       setTodayStr(getTodayStr());
-    }, 60000);
+    }, 60 * 1000); // cập nhật mỗi phút
+
     return () => clearInterval(timer);
   }, []);
 
@@ -21,8 +24,22 @@ const Calendar = ({ activities = [], meals = [] }) => {
   const [currentMonth, setCurrentMonth] = useState(
     new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
   );
+
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
+  // Khi sang ngày mới → tự chọn ngày mới nếu đang xem tháng hiện tại
+  useEffect(() => {
+    const y = currentMonth.getFullYear();
+    const m = currentMonth.getMonth();
+
+    if (y === todayDate.getFullYear() && m === todayDate.getMonth()) {
+      setSelectedDate(todayStr);
+    }
+  }, [todayStr]);
+
+  /* ======================
+     B – TÍNH KCal TRONG NGÀY
+  ====================== */
   const dayActivities = useMemo(
     () => activities.filter(a => a.date === selectedDate),
     [activities, selectedDate]
@@ -36,6 +53,9 @@ const Calendar = ({ activities = [], meals = [] }) => {
   const kcalOut = dayActivities.reduce((s, a) => s + Number(a.kcal || 0), 0);
   const kcalIn = dayMeals.reduce((s, m) => s + Number(m.calories || 0), 0);
 
+  /* ======================
+     C – ĐÁNH DẤU NGÀY
+  ====================== */
   const hasActivity = d => activities.some(a => a.date === d);
   const hasMeal = d => meals.some(m => m.date === d);
 
@@ -46,8 +66,12 @@ const Calendar = ({ activities = [], meals = [] }) => {
     return '';
   };
 
+  /* ======================
+     LỊCH THÁNG
+  ====================== */
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
+
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -57,14 +81,20 @@ const Calendar = ({ activities = [], meals = [] }) => {
 
   return (
     <div className="page-container">
-      <h1>📅 Lịch Hoạt Động & Dinh Dưỡng</h1>
+      {/* ===== HEADER ===== */}
+      <div className="calendar-top">
+        <h1>📅 Lịch Hoạt Động & Dinh Dưỡng</h1>
 
-      <div className="calendar-nav">
-        <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}>◀</button>
-        <span>{currentMonth.toLocaleString('vi-VN', { month: 'long', year: 'numeric' })}</span>
-        <button onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}>▶</button>
+        <div className="calendar-nav">
+          <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}>◀</button>
+          <span>
+            {currentMonth.toLocaleString('vi-VN', { month: 'long', year: 'numeric' })}
+          </span>
+          <button onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}>▶</button>
+        </div>
       </div>
 
+      {/* ===== CARD LỊCH ===== */}
       <div className="calendar-card">
         <div className="calendar-grid">
           {['CN','T2','T3','T4','T5','T6','T7'].map(d => (
@@ -75,37 +105,45 @@ const Calendar = ({ activities = [], meals = [] }) => {
             if (!day) return <div key={i} className="calendar-cell empty" />;
 
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const selected = dateStr === selectedDate;
+            const isToday = dateStr === todayStr;
 
             return (
               <div
                 key={i}
-                className={`calendar-cell ${getDayClass(dateStr)} ${dateStr === selectedDate ? 'selected' : ''}`}
+                className={`calendar-cell 
+                  ${getDayClass(dateStr)} 
+                  ${selected ? 'selected' : ''} 
+                  ${isToday ? 'today' : ''}
+                `}
                 onClick={() => setSelectedDate(dateStr)}
               >
-                {day}
+                <span>{day}</span>
               </div>
             );
           })}
         </div>
       </div>
 
+      {/* ===== THỐNG KÊ ===== */}
       <div className="day-summary-card">
         <h3>📊 Ngày {selectedDate}</h3>
 
         <div className="summary-grid">
-          <div className="summary-box in">+{kcalIn} kcal</div>
-          <div className="summary-box balance">{kcalIn - kcalOut} kcal</div>
-          <div className="summary-box out">-{kcalOut} kcal</div>
-        </div>
+          <div className="summary-box in">
+            <span>Nạp vào</span>
+            <strong>+{kcalIn} kcal</strong>
+          </div>
 
-        {/* ⭐ NÚT ĐIỀU HƯỚNG */}
-        <div style={{ display:'flex', gap:10, marginTop:15 }}>
-          <button onClick={() => navigate(`/activities?date=${selectedDate}`)}>
-            ✏️ Sửa hoạt động
-          </button>
-          <button onClick={() => navigate(`/nutrition?date=${selectedDate}`)}>
-            🍽️ Sửa dinh dưỡng
-          </button>
+          <div className="summary-box balance">
+            <span>Cân bằng</span>
+            <strong>{kcalIn - kcalOut} kcal</strong>
+          </div>
+
+          <div className="summary-box out">
+            <span>Tiêu hao</span>
+            <strong>-{kcalOut} kcal</strong>
+          </div>
         </div>
       </div>
     </div>
@@ -113,4 +151,3 @@ const Calendar = ({ activities = [], meals = [] }) => {
 };
 
 export default Calendar;
-
