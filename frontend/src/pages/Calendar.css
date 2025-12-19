@@ -170,3 +170,14 @@
   background: #e3f2fd;
   color: #2980b9;
 }
+/* =========================
+   A – HIGHLIGHT NGÀY HÔM NAY
+========================= */
+.calendar-cell.today {
+  border: 2px solid #3498db;
+}
+
+.calendar-cell.today:not(.selected) {
+  background: #e3f2fd;
+  color: #2c3e50;
+}
