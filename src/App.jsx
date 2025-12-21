@@ -14,7 +14,7 @@ import { MOCK_ACTIVITIES, MOCK_MEALS } from './services/mockData';
 import './App.css';
 
 function App() {
-  // ⭐ STATE DÙNG CHUNG
+  // ⭐ STATE DÙNG CHUNG - Đây là "nguồn sự thật" duy nhất cho toàn ứng dụng
   const [activities, setActivities] = useState(MOCK_ACTIVITIES);
   const [meals, setMeals] = useState(MOCK_MEALS);
 
@@ -25,6 +25,7 @@ function App() {
 
         <div className="main-content">
           <Routes>
+            {/* 1. Dashboard giờ đây nhận state để cập nhật Calo real-time */}
             <Route
               path="/"
               element={
@@ -35,6 +36,7 @@ function App() {
               }
             />
 
+            {/* 2. Trang Hoạt động dùng chung state với Dashboard */}
             <Route
               path="/activities"
               element={
@@ -45,6 +47,7 @@ function App() {
               }
             />
 
+            {/* 3. Trang Dinh dưỡng dùng chung state với Dashboard */}
             <Route
               path="/nutrition"
               element={
@@ -60,13 +63,12 @@ function App() {
               element={
                 <Calendar
                   activities={activities}
-                  setActivities={setActivities}
                   meals={meals}
-                  setMeals={setMeals}
                 />
               }
             />
 
+            {/* Hiện tại các trang này đang dùng state nội bộ bên trong file */}
             <Route path="/sleep" element={<SleepTracker />} />
             <Route path="/medical-records" element={<MedicalRecords />} />
           </Routes>
