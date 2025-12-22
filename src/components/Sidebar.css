@@ -2,7 +2,7 @@
 .sidebar {
   width: 210px;
   height: 100vh; /* Cao full màn hình */
-  background-color: #2c3e50;
+  background-color: #2c3e50; /* Màu nền tối */
   color: white;
   display: flex;
   flex-direction: column;
@@ -25,10 +25,14 @@
   display: block;
 }
 
+/* Hiệu ứng khi di chuột vào (Hover) */
 .menu-item:hover { background-color: #34495e; }
-/* ===== MENU ACTIVE ===== */
+
+/* ===== MENU ACTIVE (PHẦN QUAN TRỌNG CẦN THÊM) ===== */
+/* Đây là phần giúp menu sáng đèn khi đang chọn */
 .menu-item.active {
-  background-color: #1abc9c;
+  background-color: #1abc9c; /* Màu xanh ngọc (Green Sea) */
   color: white;
   font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Thêm chút bóng cho đẹp */
 }

@@ -1,65 +1,59 @@
 // src/pages/Dashboard.jsx
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  USERS, 
-  HEALTH_INDICATORS 
-} from '../services/mockData';
+import React, { useState, useEffect } from 'react';
+// 1. IMPORT CONFIG ĐỂ CHẠY MẠNG LAN
+import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
 import './Dashboard.css';
 
-// 1. Nhận activities và meals từ App.jsx thông qua Props
-const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
-  const today = new Date().toISOString().split('T')[0];
+// Nhận prop setIsAuthenticated để xử lý đăng xuất
+const Dashboard = ({ setIsAuthenticated }) => {
+  
+  // 2. CẤU HÌNH API
+  const USER_API_URL = `${API_BASE_URL}/test`;
 
+  // 3. STATE
   const [userInfo, setUserInfo] = useState({
-    firstName: '', lastName: '', age: '', gender: '',
-    height: '', weight: '', heartRate: '', bloodPressure: ''
+    firstName: '', 
+    lastName: '', 
+    age: '', 
+    gender: 'Nam',
+    height: '', 
+    weight: '', 
+    heartRate: '', 
+    bloodPressure: ''
   });
 
+  const [bmi, setBmi] = useState(0);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({}); 
+  const [formData, setFormData] = useState({});
 
-  // --- LOAD THÔNG TIN CÁ NHÂN (Vẫn giữ Mock cho UserInfo) ---
+  // 4. LOAD DỮ LIỆU USER TỪ BACKEND
   useEffect(() => {
-    const user = USERS.find(u => u.userId === 1);
-    const health = HEALTH_INDICATORS.find(h => h.userId === 1);
-
-    if (user && health) {
-      setUserInfo({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        age: user.age,
-        gender: user.gender,
-        height: health.height,
-        weight: health.weight,
-        heartRate: health.heartRate,
-        bloodPressure: health.bloodPressure
-      });
-    }
+    fetch(`${USER_API_URL}/${CURRENT_USER_ID}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          setUserInfo(prev => ({
+            ...prev,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            age: data.age,
+            gender: data.gender,
+            // Các chỉ số sức khỏe giữ nguyên giá trị cũ (nếu backend chưa có)
+          }));
+        }
+      })
+      .catch(err => console.error("Lỗi tải thông tin User:", err));
   }, []);
 
-  // --- 2. ĐỒNG BỘ CALO (Tự động cập nhật khi Props thay đổi) ---
-  // Dùng useMemo để tính toán lại mỗi khi activities hoặc meals thay đổi
-  const caloriesSummary = useMemo(() => {
-    const consumed = meals
-      .filter(m => m.date === today)
-      .reduce((sum, item) => sum + Number(item.calories || 0), 0);
-
-    const burned = activities
-      .filter(a => a.date === today)
-      .reduce((sum, item) => sum + Number(item.kcal || 0), 0);
-
-    return { consumed, burned };
-  }, [activities, meals, today]);
-
-  // --- TÍNH BMI (Dựa trên userInfo hiện tại) ---
-  const bmi = useMemo(() => {
+  // 5. TÍNH BMI TỰ ĐỘNG
+  useEffect(() => {
     if (userInfo.weight && userInfo.height) {
-      return (userInfo.weight / (userInfo.height * userInfo.height)).toFixed(2);
+      const bmiValue = userInfo.weight / (userInfo.height * userInfo.height);
+      setBmi(bmiValue.toFixed(2));
     }
-    return 0;
   }, [userInfo.weight, userInfo.height]);
 
-  // --- CÁC HÀM XỬ LÝ GIAO DIỆN ---
+  // --- CÁC HÀM XỬ LÝ FORM ---
   const handleEditClick = () => {
     setFormData(userInfo);
     setShowModal(true);
@@ -72,16 +66,38 @@ const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
     setFormData({ ...formData, [name]: value });
   };
 
+  // --- LƯU THÔNG TIN (GỌI API PATCH) ---
   const handleSave = (e) => {
     e.preventDefault();
-    setUserInfo(formData);
-    setShowModal(false);
+
+    const userPayload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        age: parseInt(formData.age),
+        gender: formData.gender
+    };
+
+    fetch(`${USER_API_URL}/up/${CURRENT_USER_ID}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userPayload)
+    })
+    .then(res => {
+        if (res.ok) {
+            setUserInfo(formData);
+            setShowModal(false);
+            alert("Cập nhật thông tin thành công!");
+        } else {
+            alert("Lỗi khi lưu thông tin!");
+        }
+    })
+    .catch(err => console.error("Lỗi save:", err));
   };
 
-  const getBMIStatus = (bmiValue) => {
-    if (bmiValue < 18.5) return { text: "Thiếu cân", color: "#f1c40f" };
-    if (bmiValue < 24.9) return { text: "Bình thường", color: "#27ae60" };
-    if (bmiValue < 29.9) return { text: "Thừa cân", color: "#e67e22" };
+  const getBMIStatus = (bmi) => {
+    if (bmi < 18.5) return { text: "Thiếu cân", color: "#f1c40f" };
+    if (bmi < 24.9) return { text: "Bình thường", color: "#27ae60" };
+    if (bmi < 29.9) return { text: "Thừa cân", color: "#e67e22" };
     return { text: "Béo phì", color: "#c0392b" };
   };
 
@@ -92,13 +108,26 @@ const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
       <div className="dashboard-header">
         <h1>👋 Tổng Quan Sức Khỏe</h1>
         <div className="header-actions">
+          {/* Nút Cập nhật */}
           <button className="btn-edit-profile" onClick={handleEditClick}>
             ⚙️ Cập nhật thông tin
           </button>
+          
+          {/* Nút Đăng xuất (Mới thêm) */}
           <button
             className="btn-logout"
             onClick={() => {
               if (typeof setIsAuthenticated === 'function') setIsAuthenticated(false);
+            }}
+            style={{
+                marginLeft: '10px',
+                backgroundColor: '#c0392b',
+                color: 'white',
+                border: 'none',
+                padding: '10px 15px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
             }}
           >
             🔒 Logout
@@ -106,6 +135,7 @@ const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
         </div>
       </div>
 
+      {/* THÔNG TIN CÁ NHÂN (Lấy từ Backend) */}
       <div className="user-profile-card">
         <div className="avatar-circle">
           {userInfo.lastName ? userInfo.lastName.charAt(0) : 'U'}
@@ -116,6 +146,7 @@ const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
         </div>
       </div>
 
+      {/* CHỈ SỐ CƠ THỂ */}
       <div className="metrics-grid">
         <div className="metric-card bmi-card" style={{borderColor: bmiStatus.color}}>
           <h3>Chỉ số BMI</h3>
@@ -127,45 +158,28 @@ const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
 
         <div className="metric-card">
           <h3>📏 Chiều cao</h3>
-          <p className="big-value">{userInfo.height} <span>m</span></p>
+          <p className="big-value">{userInfo.height || '--'} <span>m</span></p>
         </div>
 
         <div className="metric-card">
           <h3>⚖️ Cân nặng</h3>
-          <p className="big-value">{userInfo.weight} <span>kg</span></p>
+          <p className="big-value">{userInfo.weight || '--'} <span>kg</span></p>
         </div>
 
         <div className="metric-card">
           <h3>❤️ Nhịp tim</h3>
-          <p className="big-value">{userInfo.heartRate} <span>bpm</span></p>
+          <p className="big-value">{userInfo.heartRate || '--'} <span>bpm</span></p>
         </div>
 
         <div className="metric-card">
           <h3>🩸 Huyết áp</h3>
-          <p className="big-value">{userInfo.bloodPressure}</p>
+          <p className="big-value">{userInfo.bloodPressure || '--'}</p>
         </div>
       </div>
 
-      <h3 className="section-title">📊 Cân Bằng Năng Lượng Hôm Nay</h3>
-      <div className="calorie-summary">
-        <div className="calo-box in">
-          <span>Nạp vào (Ăn uống)</span>
-          <strong>+{caloriesSummary.consumed} kcal</strong>
-        </div>
-        
-        <div className="calo-box balance">
-          <span>Cân bằng</span>
-          <strong>{caloriesSummary.consumed - caloriesSummary.burned} kcal</strong>
-          <small>(Nạp - Tiêu hao)</small>
-        </div>
+      {/* ĐÃ XÓA PHẦN TỔNG HỢP CALO (THEO YÊU CẦU CŨ) */}
 
-        <div className="calo-box out">
-          <span>Tiêu hao (Vận động)</span>
-          <strong>-{caloriesSummary.burned} kcal</strong>
-        </div>
-      </div>
-
-      {/* --- MODAL GIỮ NGUYÊN --- */}
+      {/* MODAL SỬA THÔNG TIN */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -187,20 +201,20 @@ const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Tuổi</label>
-                  <input type="number" name="age" value={formData.age} onChange={handleInputChange} />
+                    <label>Tuổi</label>
+                    <input type="number" name="age" value={formData.age} onChange={handleInputChange} />
                 </div>
                 <div className="form-group">
-                  <label>Giới tính</label>
-                  <select name="gender" value={formData.gender} onChange={handleInputChange}>
+                    <label>Giới tính</label>
+                    <select name="gender" value={formData.gender} onChange={handleInputChange}>
                     <option>Nam</option>
                     <option>Nữ</option>
                     <option>Khác</option>
-                  </select>
+                    </select>
                 </div>
               </div>
 
-              <h4 className="form-section-title">Chỉ số cơ thể</h4>
+              <h4 className="form-section-title">Chỉ số cơ thể (Lưu tại trình duyệt)</h4>
               <div className="form-row">
                 <div className="form-group">
                   <label>Chiều cao (m)</label>
@@ -221,6 +235,7 @@ const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
                   <input type="text" name="bloodPressure" value={formData.bloodPressure} onChange={handleInputChange} />
                 </div>
               </div>
+
               <button type="submit" className="btn-save-modal" style={{backgroundColor: '#34495e'}}>Lưu Thông Tin</button>
             </form>
           </div>

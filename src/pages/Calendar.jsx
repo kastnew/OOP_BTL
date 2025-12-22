@@ -1,151 +1,167 @@
 // src/pages/Calendar.jsx
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+// 1. IMPORT FILE CẤU HÌNH CHUNG
+import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
 import './Calendar.css';
 
-const Calendar = ({ activities = [], meals = [] }) => {
+const Calendar = () => {
+  // 2. CẤU HÌNH API (Sửa để dùng biến chung)
+  // const CURRENT_USER_ID = 1; // <-- Đã import ở trên
+  // const API_BASE = "http://localhost:8080"; // <-- Thay bằng API_BASE_URL
 
-  /* ======================
-     A – ĐỒNG BỘ NGÀY HIỆN TẠI
-  ====================== */
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  // 3. STATE
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+   
+  // selectedDate: Ngày người dùng click chọn
+  const [selectedDate, setSelectedDate] = useState(() => {
+    return localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
+  });
 
-  const [todayStr, setTodayStr] = useState(getTodayStr());
+  // Dữ liệu chỉ dùng để hiện dấu chấm (dots) trên lịch
+  const [dataMap, setDataMap] = useState({ activities: [], meals: [], sleeps: [] });
 
+  // --- HELPER ĐỂ TẠO DANH SÁCH NĂM ---
+  const years = Array.from({ length: 11 }, (_, i) => 2020 + i); 
+  const months = Array.from({ length: 12 }, (_, i) => i); 
+
+  // 4. LOAD DỮ LIỆU (Dùng API_BASE_URL)
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTodayStr(getTodayStr());
-    }, 60 * 1000); // cập nhật mỗi phút
+    const fetchData = async () => {
+      try {
+        const [resAct, resMeal, resSleep] = await Promise.all([
+          fetch(`${API_BASE_URL}/DailyActivity/${CURRENT_USER_ID}`),
+          fetch(`${API_BASE_URL}/Meal/${CURRENT_USER_ID}`),
+          fetch(`${API_BASE_URL}/Sleep/${CURRENT_USER_ID}`)
+        ]);
+        
+        const acts = await resAct.json();
+        const meals = await resMeal.json();
+        const sleeps = await resSleep.json();
 
-    return () => clearInterval(timer);
+        setDataMap({ 
+          activities: acts || [], 
+          meals: meals || [], 
+          sleeps: sleeps || [] 
+        });
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu lịch:", err);
+      }
+    };
+    fetchData();
   }, []);
 
-  const todayDate = new Date(todayStr);
-
-  const [currentMonth, setCurrentMonth] = useState(
-    new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)
-  );
-
-  const [selectedDate, setSelectedDate] = useState(todayStr);
-
-  // Khi sang ngày mới → tự chọn ngày mới nếu đang xem tháng hiện tại
-  useEffect(() => {
-    const y = currentMonth.getFullYear();
-    const m = currentMonth.getMonth();
-
-    if (y === todayDate.getFullYear() && m === todayDate.getMonth()) {
-      setSelectedDate(todayStr);
-    }
-  }, [todayStr]);
-
-  /* ======================
-     B – TÍNH KCal TRONG NGÀY
-  ====================== */
-  const dayActivities = useMemo(
-    () => activities.filter(a => a.date === selectedDate),
-    [activities, selectedDate]
-  );
-
-  const dayMeals = useMemo(
-    () => meals.filter(m => m.date === selectedDate),
-    [meals, selectedDate]
-  );
-
-  const kcalOut = dayActivities.reduce((s, a) => s + Number(a.kcal || 0), 0);
-  const kcalIn = dayMeals.reduce((s, m) => s + Number(m.calories || 0), 0);
-
-  /* ======================
-     C – ĐÁNH DẤU NGÀY
-  ====================== */
-  const hasActivity = d => activities.some(a => a.date === d);
-  const hasMeal = d => meals.some(m => m.date === d);
-
-  const getDayClass = d => {
-    if (hasActivity(d) && hasMeal(d)) return 'both';
-    if (hasActivity(d)) return 'activity';
-    if (hasMeal(d)) return 'meal';
-    return '';
+  // 5. XỬ LÝ CHỌN NGÀY
+  const handleDateClick = (dateStr) => {
+    setSelectedDate(dateStr);
+    localStorage.setItem('APP_SELECTED_DATE', dateStr);
   };
 
-  /* ======================
-     LỊCH THÁNG
-  ====================== */
+  // --- 6. CÁC HÀM ĐIỀU KHIỂN LỊCH ---
+  const changeMonthOffset = (offset) => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
+  };
+
+  const handleMonthSelect = (e) => {
+    const newMonth = parseInt(e.target.value);
+    setCurrentMonth(new Date(currentMonth.getFullYear(), newMonth, 1));
+  };
+
+  const handleYearSelect = (e) => {
+    const newYear = parseInt(e.target.value);
+    setCurrentMonth(new Date(newYear, currentMonth.getMonth(), 1));
+  };
+
+  const jumpToToday = () => {
+    const today = new Date();
+    setCurrentMonth(today);
+    const todayStr = today.toISOString().split('T')[0];
+    handleDateClick(todayStr);
+  };
+
+  // 7. TÍNH TOÁN HIỂN THỊ LƯỚI
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
-
-  const firstDay = new Date(year, month, 1).getDay();
+  const firstDay = new Date(year, month, 1).getDay(); 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const days = [];
-  for (let i = 0; i < firstDay; i++) days.push(null);
-  for (let d = 1; d <= daysInMonth; d++) days.push(d);
+  const daysArray = [
+    ...Array(firstDay).fill(null), 
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  ];
+
+  // Kiểm tra ngày có dữ liệu để hiện chấm
+  const checkData = (dStr) => {
+    return {
+      hasAct: dataMap.activities.some(a => a.date === dStr),
+      hasMeal: dataMap.meals.some(m => m.date === dStr),
+      hasSleep: dataMap.sleeps.some(s => s.sleepDate === dStr)
+    };
+  };
 
   return (
     <div className="page-container">
-      {/* ===== HEADER ===== */}
+      {/* HEADER */}
       <div className="calendar-top">
-        <h1>📅 Lịch Hoạt Động & Dinh Dưỡng</h1>
+        <div className="header-left">
+             <h1>📅 Lịch Sử</h1>
+             <button className="btn-today" onClick={jumpToToday}>Hôm nay</button>
+        </div>
 
-        <div className="calendar-nav">
-          <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}>◀</button>
-          <span>
-            {currentMonth.toLocaleString('vi-VN', { month: 'long', year: 'numeric' })}
-          </span>
-          <button onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}>▶</button>
+        <div className="calendar-controls">
+          <button className="nav-btn" onClick={() => changeMonthOffset(-1)}>◀</button>
+          
+          <select value={month} onChange={handleMonthSelect} className="cal-select">
+            {months.map(m => (
+              <option key={m} value={m}>Tháng {m + 1}</option>
+            ))}
+          </select>
+
+          <select value={year} onChange={handleYearSelect} className="cal-select">
+            {years.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+
+          <button className="nav-btn" onClick={() => changeMonthOffset(1)}>▶</button>
         </div>
       </div>
 
-      {/* ===== CARD LỊCH ===== */}
+      {/* LƯỚI LỊCH */}
       <div className="calendar-card">
-        <div className="calendar-grid">
+        <div className="calendar-grid-header">
           {['CN','T2','T3','T4','T5','T6','T7'].map(d => (
-            <div key={d} className="calendar-header-cell">{d}</div>
+            <div key={d} className="cal-head-cell">{d}</div>
           ))}
-
-          {days.map((day, i) => {
-            if (!day) return <div key={i} className="calendar-cell empty" />;
+        </div>
+        
+        <div className="calendar-grid-body">
+          {daysArray.map((day, index) => {
+            if (!day) return <div key={index} className="cal-cell empty"></div>;
 
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-            const selected = dateStr === selectedDate;
-            const isToday = dateStr === todayStr;
+            const isSelected = dateStr === selectedDate;
+            const isToday = dateStr === new Date().toISOString().split('T')[0];
+            const { hasAct, hasMeal, hasSleep } = checkData(dateStr);
 
             return (
-              <div
-                key={i}
-                className={`calendar-cell 
-                  ${getDayClass(dateStr)} 
-                  ${selected ? 'selected' : ''} 
-                  ${isToday ? 'today' : ''}
-                `}
-                onClick={() => setSelectedDate(dateStr)}
+              <div 
+                key={index} 
+                className={`cal-cell ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
+                onClick={() => handleDateClick(dateStr)}
               >
-                <span>{day}</span>
+                <span className="day-num">{day}</span>
+                <div className="dots-row">
+                  {hasAct && <span className="dot dot-act"></span>}
+                  {hasMeal && <span className="dot dot-meal"></span>}
+                  {hasSleep && <span className="dot dot-sleep"></span>}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* ===== THỐNG KÊ ===== */}
-      <div className="day-summary-card">
-        <h3>📊 Ngày {selectedDate}</h3>
-
-        <div className="summary-grid">
-          <div className="summary-box in">
-            <span>Nạp vào</span>
-            <strong>+{kcalIn} kcal</strong>
-          </div>
-
-          <div className="summary-box balance">
-            <span>Cân bằng</span>
-            <strong>{kcalIn - kcalOut} kcal</strong>
-          </div>
-
-          <div className="summary-box out">
-            <span>Tiêu hao</span>
-            <strong>-{kcalOut} kcal</strong>
-          </div>
-        </div>
-      </div>
+      
+      {/* ĐÃ XÓA PHẦN SUMMARY CARD Ở DƯỚI */}
     </div>
   );
 };

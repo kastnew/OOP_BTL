@@ -7,13 +7,15 @@
 
 .header-actions { display: flex; gap: 10px; align-items: center; }
 
+/* Style cho nút Đăng xuất (Mới) */
 .btn-logout {
-  background: #e74c3c; color: white; border: none; padding: 10px 12px;
+  background: #c0392b; color: white; border: none; padding: 10px 15px;
   border-radius: 8px; cursor: pointer; font-weight: bold;
   display: flex; align-items: center; gap: 6px; transition: 0.15s;
 }
-.btn-logout:hover { background: #c0392b; transform: translateY(-2px); }
+.btn-logout:hover { background: #e74c3c; transform: translateY(-2px); }
 
+/* Style cho nút Cập nhật (Mới) */
 .btn-edit-profile {
   background: #34495e; color: white; border: none; padding: 10px 15px;
   border-radius: 8px; cursor: pointer; font-weight: bold;
@@ -66,27 +68,9 @@
   color: white; font-size: 12px; font-weight: bold; margin-top: 5px;
 }
 
-/* --- 3. Phần Tổng Calo --- */
-.section-title { color: #2c3e50; border-left: 5px solid #2c3e50; padding-left: 10px; margin-bottom: 15px; }
+/* --- (ĐÃ XÓA PHẦN STYLE CALO VÌ DASHBOARD.JSX KHÔNG CÒN DÙNG) --- */
 
-.calorie-summary {
-  display: flex; gap: 15px; flex-wrap: wrap;
-}
-
-.calo-box {
-  flex: 1; padding: 20px; border-radius: 12px;
-  display: flex; flex-direction: column; align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.in { background: #e8f5e9; color: #27ae60; }
-.out { background: #ffebee; color: #c0392b; }
-.balance { background: #e3f2fd; color: #2980b9; border: 1px dashed #2980b9; }
-
-.calo-box span { font-size: 13px; margin-bottom: 5px; font-weight: 600; }
-.calo-box strong { font-size: 22px; }
-
-/* --- Modal chỉnh sửa (Kế thừa style cũ) --- */
+/* --- Modal chỉnh sửa --- */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.5); z-index: 1000;

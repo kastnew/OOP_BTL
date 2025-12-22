@@ -1,46 +1,89 @@
 // src/pages/Activities.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+// 1. IMPORT FILE CẤU HÌNH CHUNG
+import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
 import './Activities.css';
 
-const Activities = ({ activities, setActivities }) => {
-  const today = new Date().toISOString().split('T')[0];
-
+const Activities = () => {
+  const [activities, setActivities] = useState([]);
+  const [totalBurned, setTotalBurned] = useState(0);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    startTime: '',
-    endTime: '',
-    kcal: ''
-  });
   const [editingId, setEditingId] = useState(null);
 
-  // 🔹 Chỉ lấy hoạt động của hôm nay
-  const todayActivities = activities.filter(
-    item => item.date === today
-  );
+  // Cấu hình URL gốc (Sửa để dùng biến chung)
+  // const CURRENT_USER_ID = 1; // <-- Đã import ở trên
+  const ACTIVITIES_API_URL = `${API_BASE_URL}/DailyActivity`; 
 
-  // 🔹 Tổng kcal OUT hôm nay
-  const totalBurned = todayActivities.reduce(
-    (sum, item) => sum + Number(item.kcal || 0),
-    0
-  );
+  // --- 1. LẤY NGÀY ĐANG CHỌN TỪ CALENDAR (QUAN TRỌNG) ---
+  // Nếu localStorage chưa có, mặc định lấy ngày hôm nay
+  const currentSelectedDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
 
-  // =========================
-  // HANDLERS
-  // =========================
+  const [formData, setFormData] = useState({ 
+    date: currentSelectedDate, // Mặc định theo ngày đã chọn
+    activityName: '', 
+    startTime: '', 
+    endTime: '',   
+    caloriesBurned: '' 
+  });
+
+  // --- HÀM XỬ LÝ THỜI GIAN ---
+  const extractTime = (isoString) => {
+    if (!isoString) return '';
+    const dateObj = new Date(isoString);
+    if (isNaN(dateObj.getTime())) return '';
+    const hours = dateObj.getHours().toString().padStart(2, '0');
+    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const combineDateTime = (dateStr, timeStr) => {
+    if (!dateStr || !timeStr) return null;
+    return new Date(`${dateStr}T${timeStr}:00`).toISOString();
+  };
+
+  // --- LOGIC GỌI API ---
+  const fetchActivities = () => {
+    fetch(`${ACTIVITIES_API_URL}/${CURRENT_USER_ID}`)
+      .then(res => res.json())
+      .then(data => setActivities(data)) // Lấy TOÀN BỘ về trước
+      .catch(err => console.error("Lỗi tải dữ liệu:", err));
+  };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  // --- 2. LỌC DỮ LIỆU THEO NGÀY ĐANG CHỌN ---
+  const filteredActivities = activities.filter(item => item.date === currentSelectedDate);
+
+  // --- 3. TÍNH TỔNG CALO (Chỉ tính trên danh sách đã lọc) ---
+  useEffect(() => {
+    const total = filteredActivities.reduce((sum, item) => sum + Number(item.caloriesBurned || 0), 0);
+    setTotalBurned(total);
+  }, [activities, currentSelectedDate]); // Chạy lại khi danh sách hoặc ngày chọn thay đổi
+
+  // --- XỬ LÝ FORM ---
+
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ name: '', startTime: '', endTime: '', kcal: '' });
+    setFormData({ 
+      date: currentSelectedDate, // Mặc định lấy ngày đang chọn
+      activityName: '', 
+      startTime: '', 
+      endTime: '', 
+      caloriesBurned: '' 
+    });
     setShowModal(true);
   };
 
   const handleOpenEdit = (item) => {
-    setEditingId(item.id);
+    setEditingId(item.activityId);
     setFormData({
-      name: item.name,
-      startTime: item.startTime,
-      endTime: item.endTime,
-      kcal: item.kcal
+      date: item.date, 
+      activityName: item.activityName,
+      startTime: extractTime(item.startTime), 
+      endTime: extractTime(item.endTime),
+      caloriesBurned: item.caloriesBurned
     });
     setShowModal(true);
   };
@@ -55,39 +98,55 @@ const Activities = ({ activities, setActivities }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const payload = {
+        userId: CURRENT_USER_ID,
+        activityName: formData.activityName,
+        caloriesBurned: parseFloat(formData.caloriesBurned),
+        date: formData.date,
+        startTime: combineDateTime(formData.date, formData.startTime),
+        endTime: combineDateTime(formData.date, formData.endTime)
+    };
+
     if (editingId) {
-      // ✏️ Sửa
-      setActivities(
-        activities.map(item =>
-          item.id === editingId
-            ? { ...item, ...formData }
-            : item
-        )
-      );
+      // SỬA
+      const updatePayload = { ...payload, activityId: editingId };
+      fetch(`${ACTIVITIES_API_URL}/up`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload)
+      }).then(res => {
+        if (res.ok) { fetchActivities(); handleCloseModal(); }
+        else console.error("Lỗi update");
+      });
+
     } else {
-      // ➕ Thêm (chỉ hôm nay)
-      setActivities([
-        ...activities,
-        {
-          id: Date.now(),
-          ...formData,
-          date: today
-        }
-      ]);
+      // THÊM MỚI
+      fetch(`${ACTIVITIES_API_URL}/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(res => {
+        if (res.ok) { fetchActivities(); handleCloseModal(); }
+        else console.error("Lỗi tạo mới");
+      });
     }
-    handleCloseModal();
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('Xóa hoạt động này?')) {
-      setActivities(activities.filter(item => item.id !== id));
+    if (window.confirm("Xóa hoạt động này?")) {
+      fetch(`${ACTIVITIES_API_URL}/delete/${id}`, { method: 'GET' })
+      .then(res => {
+        if (res.ok) fetchActivities();
+        else console.error("Lỗi xóa");
+      });
     }
   };
 
   return (
     <div className="page-container">
       <div className="activities-header-top">
-        <h1>🏃 Nhật Ký Hoạt Động</h1>
+        {/* Hiển thị ngày đang chọn để người dùng biết */}
+        <h1>🏃 Hoạt Động ({currentSelectedDate})</h1>
         <div className="total-burned-box">
           <span>Đã tiêu hao:</span>
           <strong>-{totalBurned} kcal</strong>
@@ -95,101 +154,68 @@ const Activities = ({ activities, setActivities }) => {
       </div>
 
       <div className="activity-list">
-        {todayActivities.map((item) => (
-          <div key={item.id} className="activity-card">
+        {/* Render danh sách ĐÃ LỌC */}
+        {filteredActivities.map((item) => (
+          <div key={item.activityId} className="activity-card">
             <div className="act-info">
               <div className="act-header-row">
-                <h3>{item.name}</h3>
-                <span className="kcal-badge-top">
-                  🔥 {item.kcal} kcal
-                </span>
+                <h3>{item.activityName}</h3>
+                <span className="kcal-badge-top">🔥 {item.caloriesBurned} kcal</span>
               </div>
-              <p>🕒 {item.startTime} - {item.endTime}</p>
+              <p style={{fontSize: '0.9rem', color: '#666', margin: '4px 0'}}>
+                📅 Ngày: <strong>{item.date}</strong>
+              </p>
+              <p>🕒 Thời gian: {extractTime(item.startTime)} - {extractTime(item.endTime)}</p>
             </div>
-
-            {/* Chỉ hôm nay mới được sửa/xóa */}
+            
             <div className="act-actions">
-              <button
-                className="btn-icon edit"
-                onClick={() => handleOpenEdit(item)}
-              >
-                ✎
-              </button>
-              <button
-                className="btn-icon delete"
-                onClick={() => handleDelete(item.id)}
-              >
-                🗑️
-              </button>
+              <button className="btn-icon edit" onClick={() => handleOpenEdit(item)}>✎</button>
+              <button className="btn-icon delete" onClick={() => handleDelete(item.activityId)}>🗑️</button>
             </div>
           </div>
         ))}
-
-        {todayActivities.length === 0 && (
-          <p style={{ textAlign: 'center' }}>
-            Hôm nay chưa có hoạt động nào.
-          </p>
+        
+        {filteredActivities.length === 0 && (
+            <p style={{textAlign: 'center', color: '#888', marginTop: '20px'}}>
+                Không có hoạt động nào trong ngày {currentSelectedDate}.
+            </p>
         )}
       </div>
 
       <button className="fab-btn" onClick={handleOpenAdd}>+</button>
 
-      {/* MODAL */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
               <h3>{editingId ? 'Chỉnh Sửa' : 'Thêm Hoạt Động'}</h3>
-              <button
-                className="close-btn"
-                onClick={handleCloseModal}
-              >
-                &times;
-              </button>
+              <button className="close-btn" onClick={handleCloseModal}>&times;</button>
             </div>
-
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Tên hoạt động</label>
-                <input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
+                <label>Ngày thực hiện</label>
+                {/* Input này vẫn cho phép sửa nếu người dùng muốn nhập bù cho ngày khác */}
+                <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
               </div>
-
-              <div className="form-row">
-                <input
-                  type="time"
-                  name="startTime"
-                  value={formData.startTime}
-                  onChange={handleInputChange}
-                  required
-                />
-                <input
-                  type="time"
-                  name="endTime"
-                  value={formData.endTime}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
               <div className="form-group">
-                <label>Calo (kcal)</label>
-                <input
-                  type="number"
-                  name="kcal"
-                  value={formData.kcal}
-                  onChange={handleInputChange}
-                  required
-                />
+                <label>Tên hoạt động</label>
+                <input type="text" name="activityName" value={formData.activityName} onChange={handleInputChange} required />
               </div>
-
-              <button className="btn-save-modal">
-                Lưu Lại
-              </button>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Bắt đầu</label>
+                  <input type="time" name="startTime" value={formData.startTime} onChange={handleInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>Kết thúc</label>
+                  <input type="time" name="endTime" value={formData.endTime} onChange={handleInputChange} required />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Calo tiêu thụ (kcal)</label>
+                <input type="number" name="caloriesBurned" value={formData.caloriesBurned} onChange={handleInputChange} required />
+              </div>
+              <button type="submit" className="btn-save-modal">Lưu Lại</button>
             </form>
           </div>
         </div>
