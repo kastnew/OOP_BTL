@@ -1,6 +1,7 @@
 // src/pages/MedicalRecords.jsx
 import React, { useState, useEffect } from 'react';
-import { MOCK_MEDICAL_RECORDS } from '../services/mockData';
+// 1. IMPORT CONFIG ĐỂ ĐỒNG BỘ VỚI NHÓM
+import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
 import './MedicalRecords.css';
 
 const MedicalRecords = () => {
@@ -8,7 +9,9 @@ const MedicalRecords = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // Form data giữ nguyên như cũ
+  // Cấu hình URL cho API Bệnh án
+  const RECORDS_API_URL = `${API_BASE_URL}/MedicalRecord`; 
+
   const [formData, setFormData] = useState({
     diseaseName: '',
     diseaseType: '',
@@ -18,11 +21,19 @@ const MedicalRecords = () => {
     notes: ''
   });
 
+  // --- 2. LOAD DỮ LIỆU TỪ BACKEND ---
+  const fetchRecords = () => {
+    fetch(`${RECORDS_API_URL}/${CURRENT_USER_ID}`)
+      .then(res => res.json())
+      .then(data => setRecords(data))
+      .catch(err => console.error("Lỗi tải bệnh án:", err));
+  };
+
   useEffect(() => {
-    setRecords(MOCK_MEDICAL_RECORDS);
+    fetchRecords();
   }, []);
 
-  // --- GIỮ NGUYÊN CÁC HÀM LOGIC (Copy từ bài cũ hoặc giữ nguyên nếu chưa xóa) ---
+  // --- CÁC HÀM ĐIỀU KHIỂN BIỂU MẪU ---
   const handleOpenAdd = () => {
     setEditingId(null);
     setFormData({ diseaseName: '', diseaseType: '', severity: 'Nhẹ', status: 'Đang điều trị', diagnosisDate: '', notes: '' });
@@ -30,7 +41,8 @@ const MedicalRecords = () => {
   };
 
   const handleOpenEdit = (item) => {
-    setEditingId(item.id);
+    // Lưu ý: ID từ Backend thường là recordId
+    setEditingId(item.recordId || item.id); 
     setFormData({
       diseaseName: item.diseaseName,
       diseaseType: item.diseaseType,
@@ -49,23 +61,49 @@ const MedicalRecords = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  // --- 3. GỬI DỮ LIỆU LÊN SERVER ---
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const payload = {
+        userId: CURRENT_USER_ID,
+        ...formData
+    };
+
     if (editingId) {
-      const updatedList = records.map((item) => 
-        item.id === editingId ? { ...item, ...formData } : item
-      );
-      setRecords(updatedList);
+      // CẬP NHẬT (Sử dụng cấu trúc tương tự trang Nutrition)
+      const updatePayload = { ...payload, recordId: editingId };
+      fetch(`${RECORDS_API_URL}/up`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload)
+      }).then(res => {
+        if (res.ok) { fetchRecords(); handleCloseModal(); }
+        else alert("Lỗi cập nhật bệnh án!");
+      });
+
     } else {
-      const newItem = { id: Date.now(), ...formData };
-      setRecords([...records, newItem]);
+      // THÊM MỚI
+      fetch(`${RECORDS_API_URL}/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(res => {
+        if (res.ok) { fetchRecords(); handleCloseModal(); }
+        else alert("Lỗi thêm bệnh án mới!");
+      });
     }
-    handleCloseModal();
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Bạn chắc chắn muốn xóa bệnh án này?")) {
-      setRecords(records.filter(item => item.id !== id));
+      // Xóa theo chuẩn GET delete mà nhóm bạn đang dùng
+      fetch(`${RECORDS_API_URL}/delete/${id}`, {
+        method: 'GET'
+      }).then(res => {
+        if (res.ok) fetchRecords();
+        else alert("Lỗi khi xóa bệnh án!");
+      });
     }
   };
 
@@ -75,22 +113,18 @@ const MedicalRecords = () => {
 
       <div className="record-list">
         {records.map((item) => (
-          <div key={item.id} className="record-card compact-card">
-            
-            {/* DÒNG 1: Tên bệnh + Nút Sửa/Xóa (Đã đưa lên đây) */}
+          <div key={item.recordId || item.id} className="record-card compact-card">
             <div className="card-top-row">
               <div className="title-group">
                 <h3>{item.diseaseName}</h3>
                 <span className="type-tag">{item.diseaseType}</span>
               </div>
-              
               <div className="action-buttons-top">
                 <button className="btn-icon edit" onClick={() => handleOpenEdit(item)}>✎</button>
-                <button className="btn-icon delete" onClick={() => handleDelete(item.id)}>🗑️</button>
+                <button className="btn-icon delete" onClick={() => handleDelete(item.recordId || item.id)}>🗑️</button>
               </div>
             </div>
 
-            {/* DÒNG 2: Các badge trạng thái */}
             <div className="card-badges-row">
               <span className={`severity-badge ${item.severity === 'Nặng' ? 'sv-high' : item.severity === 'Trung bình' ? 'sv-med' : 'sv-low'}`}>
                 {item.severity}
@@ -100,12 +134,10 @@ const MedicalRecords = () => {
               </span>
             </div>
 
-            {/* DÒNG 3: Thông tin chi tiết (Ngày + Ghi chú) */}
             <div className="card-details">
               <p className="date-info">📅 {item.diagnosisDate}</p>
               {item.notes && <p className="note-info">📝 {item.notes}</p>}
             </div>
-
           </div>
         ))}
         {records.length === 0 && <p style={{textAlign: 'center'}}>Chưa có hồ sơ bệnh án nào.</p>}
@@ -113,7 +145,7 @@ const MedicalRecords = () => {
 
       <button className="fab-btn fab-red" onClick={handleOpenAdd}>+</button>
 
-      {/* --- PHẦN MODAL GIỮ NGUYÊN KHÔNG ĐỔI --- */}
+      {/* --- PHẦN MODAL GIỮ NGUYÊN GIAO DIỆN CŨ --- */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -126,6 +158,7 @@ const MedicalRecords = () => {
                 <label>Tên bệnh</label>
                 <input type="text" name="diseaseName" value={formData.diseaseName} onChange={handleInputChange} required />
               </div>
+              {/* ... Các trường nhập liệu khác giữ nguyên ... */}
               <div className="form-row">
                 <div className="form-group">
                     <label>Loại bệnh</label>
