@@ -1,0 +1,38 @@
+/* src/components/Sidebar.css */
+.sidebar {
+  width: 210px;
+  height: 100vh; /* Cao full màn hình */
+  background-color: #2c3e50; /* Màu nền tối */
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  position: fixed; /* Cố định bên trái */
+  left: 0;
+  top: 0;
+}
+
+.logo h2 { margin-bottom: 40px; text-align: center; }
+
+.menu-item {
+  color: #ecf0f1;
+  text-decoration: none;
+  font-size: 18px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 5px;
+  transition: 0.3s;
+  display: block;
+}
+
+/* Hiệu ứng khi di chuột vào (Hover) */
+.menu-item:hover { background-color: #34495e; }
+
+/* ===== MENU ACTIVE (PHẦN QUAN TRỌNG CẦN THÊM) ===== */
+/* Đây là phần giúp menu sáng đèn khi đang chọn */
+.menu-item.active {
+  background-color: #1abc9c; /* Màu xanh ngọc (Green Sea) */
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Thêm chút bóng cho đẹp */
+}

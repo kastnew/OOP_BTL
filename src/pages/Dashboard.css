@@ -1,0 +1,101 @@
+/* src/pages/Dashboard.css */
+.page-container { padding: 20px; font-family: 'Segoe UI', sans-serif; }
+
+.dashboard-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+
+.header-actions { display: flex; gap: 10px; align-items: center; }
+
+/* Style cho nút Đăng xuất (Mới) */
+.btn-logout {
+  background: #c0392b; color: white; border: none; padding: 10px 15px;
+  border-radius: 8px; cursor: pointer; font-weight: bold;
+  display: flex; align-items: center; gap: 6px; transition: 0.15s;
+}
+.btn-logout:hover { background: #e74c3c; transform: translateY(-2px); }
+
+/* Style cho nút Cập nhật (Mới) */
+.btn-edit-profile {
+  background: #34495e; color: white; border: none; padding: 10px 15px;
+  border-radius: 8px; cursor: pointer; font-weight: bold;
+  display: flex; align-items: center; gap: 5px; transition: 0.2s;
+}
+.btn-edit-profile:hover { background: #2c3e50; transform: translateY(-2px); }
+
+/* --- 1. Thẻ Thông Tin Cá Nhân --- */
+.user-profile-card {
+  background: linear-gradient(135deg, #3498db, #2980b9); /* Màu xanh dương */
+  color: white;
+  padding: 25px; border-radius: 15px;
+  display: flex; align-items: center; gap: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.avatar-circle {
+  width: 70px; height: 70px; background: white; color: #2980b9;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 30px; font-weight: bold;
+  border: 3px solid rgba(255,255,255,0.3);
+}
+
+.user-details h2 { margin: 0; font-size: 24px; }
+.user-details p { margin: 5px 0 0; opacity: 0.9; }
+
+/* --- 2. Lưới Chỉ Số Cơ Thể --- */
+.metrics-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px; margin-bottom: 30px;
+}
+
+.metric-card {
+  background: white; padding: 20px; border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border-top: 4px solid #bdc3c7; /* Viền xám mặc định */
+}
+
+.metric-card h3 { margin: 0 0 10px; font-size: 14px; color: #7f8c8d; text-transform: uppercase; }
+
+.big-value { font-size: 28px; font-weight: bold; color: #2c3e50; }
+.big-value span { font-size: 14px; color: #95a5a6; font-weight: normal; }
+
+/* Thẻ BMI đặc biệt */
+.bmi-card { border-top-width: 0; border: 2px solid; position: relative; }
+.status-badge {
+  display: inline-block; padding: 4px 10px; border-radius: 20px;
+  color: white; font-size: 12px; font-weight: bold; margin-top: 5px;
+}
+
+/* --- (ĐÃ XÓA PHẦN STYLE CALO VÌ DASHBOARD.JSX KHÔNG CÒN DÙNG) --- */
+
+/* --- Modal chỉnh sửa --- */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5); z-index: 1000;
+  display: flex; justify-content: center; align-items: center; animation: fadeIn 0.3s;
+}
+.modal-content {
+  background: white; padding: 25px; border-radius: 15px;
+  width: 90%; max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUp 0.3s;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #aaa; }
+
+.form-section-title { 
+  margin: 15px 0 10px; color: #34495e; border-bottom: 1px solid #eee; padding-bottom: 5px; 
+}
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+.form-group input, .form-group select { 
+  width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; 
+}
+.form-row { display: flex; gap: 15px; } .form-row .form-group { flex: 1; }
+
+.btn-save-modal { width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
