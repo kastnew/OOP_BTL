@@ -1,0 +1,62 @@
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.date-picker {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  color: #666;
+}
+
+/* Section Style */
+.report-section {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.report-section h3 { margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+
+/* Stats Grid (Calo) */
+.stats-grid { display: flex; gap: 15px; }
+.stat-card { flex: 1; padding: 15px; border-radius: 8px; text-align: center; color: white; }
+.stat-card span { display: block; font-size: 13px; opacity: 0.9; margin-bottom: 5px; }
+.stat-card strong { font-size: 20px; }
+.stat-card.green { background: #27ae60; }
+.stat-card.orange { background: #e67e22; }
+.stat-card.blue { background: #2980b9; }
+
+/* Macros Grid */
+.macros-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; }
+.macro-item { background: #f8f9fa; padding: 15px; border-radius: 8px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-bottom: 5px; }
+.dot.protein { background: #e74c3c; }
+.dot.fat { background: #f1c40f; }
+.dot.fiber { background: #2ecc71; }
+.dot.sugar { background: #9b59b6; }
+
+/* Time & Rating */
+.report-row { display: flex; gap: 20px; }
+.report-col { flex: 1; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+.time-list { list-style: none; padding: 0; }
+.time-list li { padding: 10px 0; border-bottom: 1px solid #f1f1f1; font-size: 16px; }
+
+.rating-box { text-align: center; }
+.rating-score { font-size: 32px; font-weight: bold; color: #f39c12; display: block; }
+.rating-note { font-style: italic; color: #7f8c8d; margin-top: 5px; }

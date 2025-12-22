@@ -1,0 +1,57 @@
+.month-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;
+}
+
+.month-selector select {
+  padding: 8px 15px; font-size: 16px; border-radius: 8px; border: 1px solid #ddd; margin-left: 10px;
+}
+
+.section-title {
+  font-size: 18px; font-weight: bold; color: #34495e; margin: 25px 0 15px 0; border-left: 4px solid #3498db; padding-left: 10px;
+}
+
+/* 1. AVG Grid */
+.avg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.avg-card {
+  padding: 20px; border-radius: 12px; text-align: center; color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.avg-card h3 { margin: 0 0 5px 0; font-size: 14px; opacity: 0.9; }
+.avg-card p { margin: 0; font-size: 24px; font-weight: bold; }
+
+.calo-in { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+.calo-out { background: linear-gradient(135deg, #e67e22, #f39c12); }
+.balance { background: linear-gradient(135deg, #2980b9, #3498db); }
+
+/* 2. Macro Row */
+.macros-row { display: flex; gap: 15px; justify-content: space-between; }
+.macro-box {
+  flex: 1; background: white; padding: 15px; border-radius: 10px; 
+  text-align: center; border: 1px solid #eee;
+}
+.macro-box strong { display: block; font-size: 18px; color: #2c3e50; margin-top: 5px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+.dot.p { background: #e74c3c; } .dot.f { background: #f1c40f; } 
+.dot.s { background: #9b59b6; } .dot.fib { background: #2ecc71; }
+
+/* 3. Alerts Grid */
+.alerts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.alert-item { background: white; padding: 15px; border-radius: 10px; border: 1px solid #f0f0f0; }
+.alert-item span { font-size: 14px; color: #555; display: block; margin-bottom: 5px; }
+.alert-item strong { float: right; font-size: 14px; color: #333; }
+
+.progress-bar { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+.fill { height: 100%; border-radius: 4px; }
+.fill.red { background: #e74c3c; }
+.fill.yellow { background: #f1c40f; }
+.fill.orange { background: #e67e22; }
+.fill.gray { background: #95a5a6; }
+.fill.blue { background: #3498db; }
+
+/* 4. Note */
+.summary-note {
+  background: #fdf2e9; border-left: 5px solid #d35400;
+  padding: 20px; border-radius: 8px; margin-top: 30px;
+}
+.summary-note h3 { margin: 0 0 10px 0; color: #d35400; font-size: 16px; }
+.note-content { font-style: italic; color: #555; line-height: 1.5; }
