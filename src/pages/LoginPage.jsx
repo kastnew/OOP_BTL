@@ -1,5 +1,6 @@
 // src/pages/LoginPage.jsx
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "./LoginPage.css";
 
 function LoginPage({ setIsAuthenticated }) {
@@ -47,7 +48,7 @@ function LoginPage({ setIsAuthenticated }) {
         </button>
 
         <p className="login-footer">
-          Don’t have an account? <span>Sign up</span>
+          Don’t have an account? <Link to="/signup"><span>Sign up</span></Link>
         </p>
       </form>
     </div>

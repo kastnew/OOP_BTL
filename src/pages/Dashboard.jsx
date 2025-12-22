@@ -7,7 +7,7 @@ import {
 import './Dashboard.css';
 
 // 1. Nhận activities và meals từ App.jsx thông qua Props
-const Dashboard = ({ activities = [], meals = [] }) => {
+const Dashboard = ({ activities = [], meals = [], setIsAuthenticated }) => {
   const today = new Date().toISOString().split('T')[0];
 
   const [userInfo, setUserInfo] = useState({
@@ -91,9 +91,19 @@ const Dashboard = ({ activities = [], meals = [] }) => {
     <div className="page-container">
       <div className="dashboard-header">
         <h1>👋 Tổng Quan Sức Khỏe</h1>
-        <button className="btn-edit-profile" onClick={handleEditClick}>
-          ⚙️ Cập nhật thông tin
-        </button>
+        <div className="header-actions">
+          <button className="btn-edit-profile" onClick={handleEditClick}>
+            ⚙️ Cập nhật thông tin
+          </button>
+          <button
+            className="btn-logout"
+            onClick={() => {
+              if (typeof setIsAuthenticated === 'function') setIsAuthenticated(false);
+            }}
+          >
+            🔒 Logout
+          </button>
+        </div>
       </div>
 
       <div className="user-profile-card">

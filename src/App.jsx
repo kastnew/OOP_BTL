@@ -10,6 +10,7 @@ import SleepTracker from './pages/SleepTracker';
 import MedicalRecords from './pages/MedicalRecords';
 import Calendar from './pages/Calendar';
 import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
 import { MOCK_ACTIVITIES, MOCK_MEALS } from './services/mockData';
 import './App.css';
 
@@ -30,6 +31,10 @@ function App() {
             path="/login"
             element={<LoginPage setIsAuthenticated={setIsAuthenticated} />}
           />
+          <Route
+            path="/signup"
+            element={<SignupPage setIsAuthenticated={setIsAuthenticated} />}
+          />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       ) : (
@@ -45,6 +50,7 @@ function App() {
                   <Dashboard
                     activities={activities}
                     meals={meals}
+                    setIsAuthenticated={setIsAuthenticated}
                   />
                 }
               />
