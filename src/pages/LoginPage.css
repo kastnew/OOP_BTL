@@ -1,5 +1,4 @@
-/* src/pages/LoginPage.css */
-
+/* ...existing code... */
 .login-container {
   height: 100vh;
   background: linear-gradient(135deg, #667eea, #764ba2);
@@ -7,20 +6,87 @@
   align-items: center;
   justify-content: center;
   font-family: Arial, Helvetica, sans-serif;
+  position: relative;
+  overflow: hidden;
 }
 
+/* decorative gradient blobs */
+.login-container::before,
+.login-container::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.25;
+  transform: translateZ(0);
+}
+.login-container::before {
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), transparent 35%), rgba(255,119,180,0.12);
+  top: -80px;
+  left: -80px;
+}
+.login-container::after {
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle at 70% 70%, rgba(255,255,255,0.12), transparent 30%), rgba(90,103,216,0.12);
+  bottom: -100px;
+  right: -80px;
+}
+
+/* ...existing code... */
 .login-card {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.88);
   width: 360px;
   padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.35);
+  position: relative;
+  z-index: 2;
 }
 
+/* enhanced title with HealthApp badge + stethoscope (ống nghe) icon */
 .login-title {
   text-align: center;
   margin-bottom: 20px;
   color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Brand badge (HealthApp) */
+.login-title::before {
+  content: "HealthApp";
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(90deg, #ff758c, #ff7eb3);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: 0 8px 22px rgba(103,58,183,0.14);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.login-title::after {
+  content: "";
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6z' fill='%23ff3b30'/></svg>");
+  background-size: 22px 22px;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.08));
+  transform: translateY(-1px);
 }
 
 .input-group {
@@ -36,31 +102,41 @@
 
 .input-group input {
   width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e6e6f0;
   font-size: 14px;
+  background: linear-gradient(180deg, #fff, #fbfbff);
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 120ms ease;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
 }
 
 .input-group input:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 6px 20px rgba(102,126,234,0.12);
+  transform: translateY(-1px);
 }
 
+/* call-to-action button with subtle gradient */
 .login-btn {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: none;
-  border-radius: 6px;
-  background-color: #667eea;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #667eea, #5a67d8);
   color: #fff;
   font-size: 16px;
   cursor: pointer;
   margin-top: 10px;
+  box-shadow: 0 10px 20px rgba(90,103,216,0.16);
+  transition: transform 120ms ease, box-shadow 180ms ease, opacity 120ms ease;
 }
 
 .login-btn:hover {
-  background-color: #5a67d8;
+  background: linear-gradient(90deg,#5a67d8,#4c51bf);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(74,85,220,0.18);
 }
 
 .login-footer {
@@ -73,4 +149,11 @@
 .login-footer span {
   color: #667eea;
   cursor: pointer;
+}
+
+/* small responsive tweaks */
+@media (max-width: 420px) {
+  .login-card { width: 92%; padding: 22px; }
+  .login-title::before { font-size: 13px; padding: 5px 10px; }
+  .login-title::after { width: 24px; height: 24px; background-size: 20px 20px; }
 }
