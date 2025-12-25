@@ -103,6 +103,17 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
   const bmiStatus = getBMIStatus(bmi);
 
+  // --- HÀM XỬ LÝ ĐĂNG XUẤT (FIX LOGIC LOCALSTORAGE) ---
+  const handleLogout = () => {
+    // 1. Xóa trạng thái lưu trong bộ nhớ trình duyệt
+    localStorage.removeItem("app_is_auth");
+    
+    // 2. Cập nhật state để React chuyển về màn hình Login
+    if (typeof setIsAuthenticated === 'function') {
+        setIsAuthenticated(false);
+    }
+  };
+
   return (
     <div className="page-container">
       <div className="dashboard-header">
@@ -113,12 +124,10 @@ const Dashboard = ({ setIsAuthenticated }) => {
             ⚙️ Cập nhật thông tin
           </button>
           
-          {/* Nút Đăng xuất (Mới thêm) */}
+          {/* Nút Đăng xuất (Đã sửa logic) */}
           <button
             className="btn-logout"
-            onClick={() => {
-              if (typeof setIsAuthenticated === 'function') setIsAuthenticated(false);
-            }}
+            onClick={handleLogout} // Gọi hàm handleLogout thay vì viết inline
             style={{
                 marginLeft: '10px',
                 backgroundColor: '#c0392b',
@@ -176,8 +185,6 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <p className="big-value">{userInfo.bloodPressure || '--'}</p>
         </div>
       </div>
-
-      {/* ĐÃ XÓA PHẦN TỔNG HỢP CALO (THEO YÊU CẦU CŨ) */}
 
       {/* MODAL SỬA THÔNG TIN */}
       {showModal && (

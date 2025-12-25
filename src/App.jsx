@@ -21,8 +21,12 @@ import './App.css';
 
 function App() {
   // ⭐ STATE AUTH (Quản lý trạng thái đăng nhập)
-  // Mặc định là false (chưa đăng nhập)
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Thay vì: const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Hãy dùng cách này (Lazy initialization):
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Kiểm tra ngay khi khởi động app
+    return localStorage.getItem("app_is_auth") === "true";
+  });
 
   return (
     <BrowserRouter>

@@ -12,6 +12,8 @@ function LoginPage({ setIsAuthenticated }) {
 
     // Demo login (sau này thay bằng API)
     if (email && password) {
+      // Lưu cờ đánh dấu đã đăng nhập vào bộ nhớ trình duyệt
+      localStorage.setItem("app_is_auth", "true");
       setIsAuthenticated(true);
     }
   };
