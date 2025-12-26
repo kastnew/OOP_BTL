@@ -4,53 +4,46 @@ import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
 import './CalendarPicker.css';
 
 const CalendarPicker = ({ onDateSelect, onClose }) => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [dataMap, setDataMap] = useState({ activities: [], meals: [], sleeps: [] });
+  // Lấy ngày hiện đang lưu trong hệ thống để tô màu
+  const activeDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
+  
+  const [currentMonth, setCurrentMonth] = useState(new Date(activeDate));
+  const [dataMap, setDataMap] = useState({ activities: [], meals: [] });
 
-  // Load dữ liệu để hiển thị các chấm (dots) báo hiệu ngày có dữ liệu
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [resAct, resMeal, resSleep] = await Promise.all([
+        const [resAct, resMeal] = await Promise.all([
           fetch(`${API_BASE_URL}/DailyActivity/${CURRENT_USER_ID}`),
-          fetch(`${API_BASE_URL}/Meal/${CURRENT_USER_ID}`),
-          fetch(`${API_BASE_URL}/Sleep/${CURRENT_USER_ID}`)
+          fetch(`${API_BASE_URL}/Meal/${CURRENT_USER_ID}`)
         ]);
         setDataMap({ 
           activities: await resAct.json() || [], 
-          meals: await resMeal.json() || [], 
-          sleeps: await resSleep.json() || [] 
+          meals: await resMeal.json() || [] 
         });
-      } catch (err) {
-        console.error("Lỗi tải dữ liệu lịch:", err);
-      }
+      } catch (err) { console.error(err); }
     };
     fetchData();
   }, []);
 
-  // Các hàm điều khiển lịch (Giữ nguyên logic của bạn)
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const firstDay = new Date(year, month, 1).getDay(); 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysArray = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
-  const changeMonth = (offset) => {
-    setCurrentMonth(new Date(year, month + offset, 1));
-  };
-
   return (
     <div className="calendar-modal-overlay" onClick={onClose}>
       <div className="calendar-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="calendar-modal-header">
-          <h3>📅 Chọn ngày nhập liệu</h3>
+        <header className="calendar-modal-header">
+          <h3>Chọn Ngày 📅</h3>
           <button className="close-btn" onClick={onClose}>&times;</button>
-        </div>
+        </header>
 
         <div className="calendar-modal-controls">
-          <button onClick={() => changeMonth(-1)}>◀</button>
-          <span>Tháng {month + 1} - {year}</span>
-          <button onClick={() => changeMonth(1)}>▶</button>
+          <button className="nav-btn" onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}>◀</button>
+          <span className="month-label">Tháng {month + 1}, {year}</span>
+          <button className="nav-btn" onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}>▶</button>
         </div>
 
         <div className="calendar-modal-grid">
@@ -59,13 +52,15 @@ const CalendarPicker = ({ onDateSelect, onClose }) => {
           ))}
           {daysArray.map((day, index) => {
             if (!day) return <div key={index} className="modal-cell empty"></div>;
+            
             const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const isToday = dateStr === new Date().toISOString().split('T')[0];
+            const isSelected = dateStr === activeDate; // Làm nổi bật ngày đang chọn
             
             return (
               <div 
                 key={index} 
-                className={`modal-cell ${isToday ? 'is-today' : ''}`}
+                className={`modal-cell ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''}`}
                 onClick={() => {
                   onDateSelect(dateStr);
                   onClose();
