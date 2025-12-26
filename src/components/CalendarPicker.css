@@ -1,28 +1,37 @@
 /* src/components/CalendarPicker.css */
+:root {
+  --primary-color: #4a90e2;
+  --bg-modal: #ffffff;
+  --text-main: #2c3e50;
+  --dot-meal: #2ecc71;
+  --dot-act: #e67e22;
+  --today-border: #3498db;
+}
+
 .calendar-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  backdrop-filter: blur(5px);
+  z-index: 3000;
+  backdrop-filter: blur(8px); /* Tạo hiệu ứng kính mờ hiện đại */
 }
 
 .calendar-modal-content {
-  background: white;
-  width: 90%;
-  max-width: 380px;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-  animation: calendarSlideUp 0.3s ease-out;
+  background: var(--bg-modal);
+  width: 95%;
+  max-width: 400px;
+  padding: 25px;
+  border-radius: 24px; /* Bo góc cực mềm */
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  animation: calendarPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes calendarSlideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+@keyframes calendarPop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .calendar-modal-header {
@@ -32,52 +41,107 @@
   margin-bottom: 20px;
 }
 
+.calendar-modal-header h3 {
+  font-size: 1.3rem;
+  color: var(--text-main);
+  margin: 0;
+}
+
 .calendar-modal-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  font-weight: bold;
+  margin-bottom: 20px;
+  background: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 12px;
+}
+
+.nav-btn {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.nav-btn:hover { background: #eee; }
+
+.month-label {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 1.1rem;
 }
 
 .calendar-modal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 8px;
 }
 
 .modal-grid-head {
   text-align: center;
-  font-size: 0.8rem;
-  color: #888;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: #a0aec0;
+  text-transform: uppercase;
   padding-bottom: 10px;
 }
 
 .modal-cell {
-  height: 45px;
+  aspect-ratio: 1 / 1; /* Đảm bảo ô luôn vuông */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 14px;
   cursor: pointer;
   position: relative;
-  transition: 0.2s;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  border: 2px solid transparent;
 }
 
-.modal-cell:hover { background: #f0f0f0; }
-.modal-cell.is-today { border: 2px solid #3498db; }
+.modal-cell:hover {
+  background: #edf2f7;
+  transform: translateY(-2px);
+}
 
+.modal-cell.is-today {
+  border-color: var(--today-border);
+  color: var(--primary-color);
+}
+
+.modal-cell.is-selected {
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+
+/* Kiểu dáng cho các chấm dữ liệu */
 .modal-dots {
   display: flex;
-  gap: 2px;
-  position: absolute;
-  bottom: 5px;
+  gap: 3px;
+  margin-top: 4px;
 }
 
 .m-dot {
-  width: 4px; height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
 }
-.dot-act { background: #e67e22; }
-.dot-meal { background: #2ecc71; }
+
+.dot-act { background: var(--dot-act); box-shadow: 0 0 5px var(--dot-act); }
+.dot-meal { background: var(--dot-meal); box-shadow: 0 0 5px var(--dot-meal); }
+
+.close-btn {
+  background: #f1f2f6;
+  border: none;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
