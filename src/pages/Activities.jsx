@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
-import CalendarPicker from '../components/CalendarPicker'; // Thêm Component lịch trang kép
+import CalendarPicker from '../components/CalendarPicker'; // (Từ code đồng nghiệp)
 import './Activities.css';
 
 const Activities = () => {
@@ -11,13 +11,13 @@ const Activities = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // MỚI: State điều khiển Modal Lịch
+  // MỚI: State điều khiển Modal Lịch (Từ code đồng nghiệp)
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Cấu hình URL gốc
+  // Cấu hình URL
   const ACTIVITIES_API_URL = `${API_BASE_URL}/DailyActivity`; 
 
-  // --- 1. LẤY NGÀY ĐANG CHỌN TỪ LOCALSTORAGE ---
+  // --- 1. LẤY NGÀY ĐANG CHỌN ---
   const currentSelectedDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
 
   const [formData, setFormData] = useState({ 
@@ -28,26 +28,30 @@ const Activities = () => {
     caloriesBurned: '' 
   });
 
-  // --- HÀM XỬ LÝ THỜI GIAN (GIỮ NGUYÊN GỐC) ---
+  // --- HÀM XỬ LÝ THỜI GIAN (GIỮ CỦA BẠN - ĐỂ KHỚP BACKEND) ---
+  
+  // 1. Chuyển chuỗi từ Backend (2025-12-27T08:30:00) thành giờ hiển thị input (08:30)
   const extractTime = (isoString) => {
     if (!isoString) return '';
-    const dateObj = new Date(isoString);
-    if (isNaN(dateObj.getTime())) return '';
-    const hours = dateObj.getHours().toString().padStart(2, '0');
-    const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    try {
+        const timePart = isoString.split('T')[1]; 
+        return timePart.substring(0, 5); // Lấy HH:mm
+    } catch (e) {
+        return '';
+    }
   };
 
-  const combineDateTime = (dateStr, timeStr) => {
+  // 2. Gộp Ngày + Giờ để gửi lên Backend (Tạo format LocalDateTime chuẩn: YYYY-MM-DDTHH:mm:ss)
+  const combineDateTimeLocal = (dateStr, timeStr) => {
     if (!dateStr || !timeStr) return null;
-    return new Date(`${dateStr}T${timeStr}:00`).toISOString();
+    return `${dateStr}T${timeStr}:00`; 
   };
 
   // --- LOGIC GỌI API ---
   const fetchActivities = () => {
     fetch(`${ACTIVITIES_API_URL}/${CURRENT_USER_ID}`)
       .then(res => res.json())
-      .then(data => setActivities(data)) 
+      .then(data => setActivities(data))
       .catch(err => console.error("Lỗi tải dữ liệu:", err));
   };
 
@@ -55,25 +59,28 @@ const Activities = () => {
     fetchActivities();
   }, []);
 
-  // --- MỚI: XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH MODAL ---
+  // --- MỚI: XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH MODAL (Từ code đồng nghiệp) ---
   const handleDateChange = (newDate) => {
     localStorage.setItem('APP_SELECTED_DATE', newDate);
     // Cập nhật lại ngày mặc định trong form để khớp với ngày vừa chọn
     setFormData(prev => ({ ...prev, date: newDate }));
-    // Đồng bộ lại dữ liệu
-    fetchActivities();
+    // Đồng bộ lại dữ liệu (Fetch lại API)
+    // Lưu ý: React state update là bất đồng bộ, nên tốt nhất gọi fetchActivities 
+    // trong useEffect lắng nghe currentSelectedDate, hoặc gọi thủ công ở đây nhưng cần cẩn thận.
+    // Cách tốt nhất là reload trang hoặc trigger useEffect phụ thuộc vào currentSelectedDate (nhưng ở đây ta reload nhẹ).
+    window.location.reload(); // Cách đơn giản nhất để refresh toàn bộ state theo ngày mới
   };
 
-  // --- 2. LỌC DỮ LIỆU THEO NGÀY ĐANG CHỌN ---
+  // --- 2. LỌC DỮ LIỆU ---
   const filteredActivities = activities.filter(item => item.date === currentSelectedDate);
 
   // --- 3. TÍNH TỔNG CALO ---
   useEffect(() => {
     const total = filteredActivities.reduce((sum, item) => sum + Number(item.caloriesBurned || 0), 0);
     setTotalBurned(total);
-  }, [activities, currentSelectedDate]); 
+  }, [activities, currentSelectedDate]);
 
-  // --- XỬ LÝ FORM (GIỮ NGUYÊN GỐC) ---
+  // --- XỬ LÝ FORM ---
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -91,10 +98,10 @@ const Activities = () => {
     setEditingId(item.activityId);
     setFormData({
       date: item.date, 
-      activityName: item.activityName,
+      activityName: item.activityName, 
       startTime: extractTime(item.startTime), 
       endTime: extractTime(item.endTime),
-      caloriesBurned: item.caloriesBurned
+      caloriesBurned: item.caloriesBurned 
     });
     setShowModal(true);
   };
@@ -109,17 +116,18 @@ const Activities = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Dùng logic của BẠN (combineDateTimeLocal) để khớp Backend
     const payload = {
         userId: CURRENT_USER_ID,
         activityName: formData.activityName,
         caloriesBurned: parseFloat(formData.caloriesBurned),
         date: formData.date,
-        startTime: combineDateTime(formData.date, formData.startTime),
-        endTime: combineDateTime(formData.date, formData.endTime)
+        startTime: combineDateTimeLocal(formData.date, formData.startTime),
+        endTime: combineDateTimeLocal(formData.date, formData.endTime)
     };
 
     if (editingId) {
-      // SỬA (Dùng PATCH theo chuẩn của bạn)
+      // SỬA (PATCH)
       const updatePayload = { ...payload, activityId: editingId };
       fetch(`${ACTIVITIES_API_URL}/up`, {
         method: 'PATCH',
@@ -131,7 +139,7 @@ const Activities = () => {
       });
 
     } else {
-      // THÊM MỚI
+      // THÊM MỚI (POST)
       fetch(`${ACTIVITIES_API_URL}/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,7 +163,7 @@ const Activities = () => {
 
   return (
     <div className="page-container">
-      {/* 🟢 PHẦN TIÊU ĐỀ TÍCH HỢP MỞ LỊCH */}
+      {/* 🟢 PHẦN TIÊU ĐỀ TÍCH HỢP MỞ LỊCH (Từ code đồng nghiệp) */}
       <div 
         className="activities-header-top" 
         onClick={() => setShowCalendar(true)}
@@ -169,7 +177,7 @@ const Activities = () => {
         </div>
       </div>
 
-      {/* 🟢 HIỂN THỊ MODAL LỊCH KHI BẤM VÀO TIÊU ĐỀ */}
+      {/* 🟢 HIỂN THỊ MODAL LỊCH (Từ code đồng nghiệp) */}
       {showCalendar && (
         <CalendarPicker 
           onDateSelect={handleDateChange} 
@@ -207,7 +215,6 @@ const Activities = () => {
 
       <button className="fab-btn" onClick={handleOpenAdd}>+</button>
 
-      {/* --- MODAL THÊM/SỬA HOẠT ĐỘNG (GIỮ NGUYÊN GỐC) --- */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">

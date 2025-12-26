@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
-import CalendarPicker from '../components/CalendarPicker'; // Thêm Component lịch trang kép
+import CalendarPicker from '../components/CalendarPicker'; // (Từ code đồng nghiệp)
 import './SleepTracker.css';
 
 const SleepTracker = () => {
@@ -12,16 +12,16 @@ const SleepTracker = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // MỚI: State điều khiển Modal Lịch
+  // MỚI: State điều khiển Modal Lịch (Từ code đồng nghiệp)
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // --- CẤU HÌNH KẾT NỐI (Đã sửa để dùng biến chung) ---
+  // --- CẤU HÌNH KẾT NỐI ---
   const SLEEP_API_URL = `${API_BASE_URL}/Sleep`;
 
   // --- 1. LẤY NGÀY ĐANG CHỌN TỪ LOCALSTORAGE ---
   const currentSelectedDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
 
-  // State Form nhập liệu (Giữ nguyên các trường của bạn)
+  // State Form nhập liệu
   const [formData, setFormData] = useState({
     sleepDate: currentSelectedDate, 
     sleepType: 'Giấc đêm',
@@ -30,15 +30,19 @@ const SleepTracker = () => {
     sleepQuality: 'Tốt'
   });
 
-  // --- HÀM HỖ TRỢ CHUYỂN ĐỔI THỜI GIAN (GIỮ NGUYÊN GỐC) ---
+  // --- HÀM HỖ TRỢ CHUYỂN ĐỔI THỜI GIAN (GIỮ CỦA BẠN - ĐỂ KHỚP BACKEND) ---
+  
+  // 1. Chuyển từ Backend (YYYY-MM-DDTHH:mm:ss) sang Input (YYYY-MM-DDTHH:mm)
   const formatToInputDateTime = (isoString) => {
     if (!isoString) return '';
     return isoString.substring(0, 16); 
   };
 
-  const formatToBackendDate = (localDateTimeString) => {
-    if (!localDateTimeString) return null;
-    return new Date(localDateTimeString).toISOString(); 
+  // 2. Chuyển từ Input (YYYY-MM-DDTHH:mm) sang Backend (YYYY-MM-DDTHH:mm:ss)
+  // Logic này quan trọng để giữ đúng giờ địa phương cho Backend Java LocalDatetime
+  const formatToBackendDate = (localDateTimeInput) => {
+    if (!localDateTimeInput) return null;
+    return `${localDateTimeInput}:00`; 
   };
 
   // --- 2. LOAD DỮ LIỆU TỪ API ---
@@ -53,19 +57,19 @@ const SleepTracker = () => {
     fetchSleeps();
   }, []);
 
-  // --- MỚI: XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH ---
+  // --- MỚI: XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH (Từ code đồng nghiệp) ---
   const handleDateChange = (newDate) => {
     localStorage.setItem('APP_SELECTED_DATE', newDate);
     // Cập nhật lại ngày mặc định trong form để khớp ngày chọn
     setFormData(prev => ({ ...prev, sleepDate: newDate }));
-    // Đồng bộ lại dữ liệu của ngày mới
-    fetchSleeps();
+    // Reload nhẹ để cập nhật toàn bộ ứng dụng theo ngày mới
+    window.location.reload(); 
   };
 
   // --- 3. LỌC DỮ LIỆU THEO NGÀY ĐANG CHỌN ---
   const filteredSleepData = sleepData.filter(item => item.sleepDate === currentSelectedDate);
 
-  // --- CÁC HÀM ĐIỀU KHIỂN (GIỮ NGUYÊN GỐC) ---
+  // --- CÁC HÀM ĐIỀU KHIỂN ---
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -98,7 +102,7 @@ const SleepTracker = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // --- GỬI DỮ LIỆU ---
+  // --- GỬI DỮ LIỆU (Dùng logic V2 của bạn để khớp Backend) ---
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -107,14 +111,15 @@ const SleepTracker = () => {
         sleepDate: formData.sleepDate,
         sleepType: formData.sleepType,
         sleepQuality: formData.sleepQuality,
+        // Dùng hàm format V2 (thêm :00)
         sleepTime: formatToBackendDate(formData.sleepTime),
         wakeTime: formatToBackendDate(formData.wakeTime)
     };
 
     if (editingId) {
-      // SỬA: Giữ nguyên logic ID trên URL của bạn
+      // SỬA: Backend mapping @PostMapping("/up") -> Không có ID trên URL
       const updatePayload = { ...payload, sleepId: editingId };
-      fetch(`${SLEEP_API_URL}/up/${editingId}`, {
+      fetch(`${SLEEP_API_URL}/up`, {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatePayload)
@@ -147,20 +152,22 @@ const SleepTracker = () => {
     }
   };
 
-  // Hàm hiển thị ngày giờ đẹp (GIỮ NGUYÊN GỐC)
+  // Hàm hiển thị ngày giờ đẹp
   const formatDisplayTime = (isoString) => {
     if (!isoString) return "---";
-    const date = new Date(isoString);
-    if (isNaN(date.getTime())) return isoString;
-    return date.toLocaleString('vi-VN', { 
-        hour: '2-digit', minute: '2-digit', 
-        day: '2-digit', month: '2-digit' 
-    });
+    try {
+        const [datePart, timePart] = isoString.split('T');
+        const [y, m, d] = datePart.split('-');
+        const [H, M] = timePart.split(':');
+        return `${H}:${M} ${d}/${m}`;
+    } catch(e) {
+        return isoString;
+    }
   };
 
   return (
     <div className="page-container">
-      {/* 🟢 PHẦN TIÊU ĐỀ TÍCH HỢP MỞ LỊCH */}
+      {/* 🟢 PHẦN TIÊU ĐỀ TÍCH HỢP MỞ LỊCH (Từ code đồng nghiệp) */}
       <div 
         className="sleep-header-top" 
         onClick={() => setShowCalendar(true)} 
@@ -170,7 +177,7 @@ const SleepTracker = () => {
         <h1>🌙 Theo Dõi Giấc Ngủ ({currentSelectedDate}) 📅</h1>
       </div>
 
-      {/* 🟢 HIỂN THỊ MODAL LỊCH (TRANG KÉP) */}
+      {/* 🟢 HIỂN THỊ MODAL LỊCH (Từ code đồng nghiệp) */}
       {showCalendar && (
         <CalendarPicker 
           onDateSelect={handleDateChange} 
@@ -178,7 +185,7 @@ const SleepTracker = () => {
         />
       )}
 
-      {/* DANH SÁCH GIẤC NGỦ (ĐÃ LỌC) */}
+      {/* DANH SÁCH GIẤC NGỦ */}
       <div className="sleep-list">
         {filteredSleepData.map((item) => (
           <div key={item.sleepId} className="sleep-card">
@@ -214,7 +221,7 @@ const SleepTracker = () => {
 
       <button className="fab-btn fab-purple" onClick={handleOpenAdd}>+</button>
 
-      {/* MODAL NHẬP LIỆU (GIỮ NGUYÊN GỐC) */}
+      {/* MODAL NHẬP LIỆU */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">

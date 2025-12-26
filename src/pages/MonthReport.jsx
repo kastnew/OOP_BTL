@@ -5,59 +5,107 @@ import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
 import './MonthReport.css';
 
 const MonthReport = () => {
-  // 2. CẤU HÌNH API (Sửa để dùng biến chung)
-  // const CURRENT_USER_ID = 1; // <-- Đã import ở trên
+  // 2. CẤU HÌNH API
   const API_URL = `${API_BASE_URL}/monthsummary`;
 
   // Mặc định chọn tháng hiện tại
-  const currentMonth = new Date().getMonth() + 1;
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // --- HÀM AN TOÀN: Biến null/undefined/NaN thành 0 để tránh lỗi màn hình trắng ---
+  const safeNum = (num) => {
+    return (num === null || num === undefined || isNaN(num)) ? 0 : num;
+  };
 
   // Gọi API lấy báo cáo tháng
   const fetchMonthReport = () => {
     setLoading(true);
     setReport(null);
 
+    // Chuẩn bị Payload khớp với Backend (MonthSummaryRequest)
+    const requestBody = {
+        month: parseInt(selectedMonth),
+        year: parseInt(selectedYear)
+    };
+
     fetch(`${API_URL}/${CURRENT_USER_ID}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(parseInt(selectedMonth)) // Gửi số tháng (VD: 12)
+      body: JSON.stringify(requestBody)
     })
     .then(res => {
       if (!res.ok) throw new Error("Lỗi kết nối");
-      return res.text(); // Đọc text trước để check rỗng
+      return res.text();
     })
     .then(text => {
       if (text) {
-        setReport(JSON.parse(text));
+        try {
+            const data = JSON.parse(text);
+            
+            // --- LOGIC QUAN TRỌNG: LỌC DỮ LIỆU RỖNG ---
+            // Chỉ hiển thị nếu object tồn tại VÀ có tổng số ngày dữ liệu > 0
+            if (data && data.totalDays && data.totalDays > 0) {
+                setReport(data);
+            } else {
+                // Nếu totalDays = 0 -> Coi như tháng đó trống
+                setReport(null);
+            }
+        } catch (e) {
+            console.error("Lỗi parse JSON:", e);
+            setReport(null);
+        }
       } else {
         setReport(null);
       }
     })
-    .catch(err => console.error(err))
+    .catch(err => {
+        console.error(err);
+        setReport(null);
+    })
     .finally(() => setLoading(false));
   };
 
+  // Chạy lại khi Tháng HOẶC Năm thay đổi
   useEffect(() => {
     fetchMonthReport();
-  }, [selectedMonth]);
+  }, [selectedMonth, selectedYear]);
+
+  // Tạo danh sách năm (Ví dụ: 2023 -> 2030)
+  const years = Array.from({ length: 8 }, (_, i) => 2023 + i);
 
   return (
     <div className="page-container">
       <div className="month-header">
-        <h1>📅 Báo Cáo Tháng {selectedMonth}</h1>
+        <h1>📅 Báo Cáo Tháng {selectedMonth}/{selectedYear}</h1>
+        
         <div className="month-selector">
-          <label>Chọn tháng:</label>
-          <select 
-            value={selectedMonth} 
-            onChange={(e) => setSelectedMonth(e.target.value)}
-          >
-            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-              <option key={m} value={m}>Tháng {m}</option>
-            ))}
-          </select>
+          <div className="selector-group">
+            <label>Tháng:</label>
+            <select 
+              value={selectedMonth} 
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                <option key={m} value={m}>Tháng {m}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="selector-group" style={{marginLeft: '15px'}}>
+             <label>Năm:</label>
+             <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(e.target.value)}
+             >
+                {years.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                ))}
+             </select>
+          </div>
         </div>
       </div>
 
@@ -65,7 +113,7 @@ const MonthReport = () => {
 
       {!loading && !report && (
         <div className="empty-state">
-          <p>📭 Không có dữ liệu tổng hợp cho <strong>Tháng {selectedMonth}</strong>.</p>
+          <p>📭 Không có dữ liệu tổng hợp cho <strong>Tháng {selectedMonth}/{selectedYear}</strong>.</p>
         </div>
       )}
 
@@ -77,16 +125,16 @@ const MonthReport = () => {
           <div className="avg-grid">
             <div className="avg-card calo-in">
               <h3>Nạp vào</h3>
-              <p>{report.avgCaloriesIn?.toFixed(0)} kcal</p>
+              {/* Sử dụng safeNum để tránh lỗi khi dữ liệu bị null */}
+              <p>{safeNum(report.avgCaloriesIn).toFixed(0)} kcal</p>
             </div>
             <div className="avg-card calo-out">
               <h3>Tiêu hao</h3>
-              <p>{report.avgCaloriesOut?.toFixed(0)} kcal</p>
+              <p>{safeNum(report.avgCaloriesOut).toFixed(0)} kcal</p>
             </div>
-            {/* Cân bằng = Vào - Ra */}
             <div className="avg-card balance">
               <h3>Cân bằng</h3>
-              <p>{(report.avgCaloriesIn - report.avgCaloriesOut)?.toFixed(0)} kcal</p>
+              <p>{(safeNum(report.avgCaloriesIn) - safeNum(report.avgCaloriesOut)).toFixed(0)} kcal</p>
             </div>
           </div>
 
@@ -95,70 +143,51 @@ const MonthReport = () => {
           <div className="macros-row">
             <div className="macro-box">
               <span className="dot p"></span> Protein
-              <strong>{report.avgProtein?.toFixed(1)}g</strong>
+              <strong>{safeNum(report.avgProtein).toFixed(1)}g</strong>
             </div>
             <div className="macro-box">
               <span className="dot f"></span> Chất béo
-              <strong>{report.avgFat?.toFixed(1)}g</strong>
+              <strong>{safeNum(report.avgFat).toFixed(1)}g</strong>
             </div>
             <div className="macro-box">
               <span className="dot s"></span> Đường
-              <strong>{report.avgSugar?.toFixed(1)}g</strong>
+              <strong>{safeNum(report.avgSugar).toFixed(1)}g</strong>
             </div>
             <div className="macro-box">
               <span className="dot fib"></span> Chất xơ
-              <strong>{report.avgFiber?.toFixed(1)}g</strong>
+              <strong>{safeNum(report.avgFiber).toFixed(1)}g</strong>
             </div>
           </div>
 
           {/* 3. THỐNG KÊ CẢNH BÁO */}
-          <div className="section-title">⚠️ Thống Kê Cảnh Báo ({report.totalDays} ngày dữ liệu)</div>
+          <div className="section-title">⚠️ Thống Kê Cảnh Báo ({safeNum(report.totalDays)} ngày dữ liệu)</div>
           <div className="alerts-grid">
-            <div className="alert-item">
-              <span>Thừa năng lượng (Vào Nhiều Hơn Ra)</span>
-              <div className="progress-bar">
-                <div className="fill red" style={{width: `${(report.daysCaloriesInMoreThanOut / report.totalDays) * 100}%`}}></div>
-              </div>
-              <strong>{report.daysCaloriesInMoreThanOut} ngày</strong>
-            </div>
-
-            <div className="alert-item">
-              <span>Ăn quá nhiều Đường</span>
-              <div className="progress-bar">
-                <div className="fill yellow" style={{width: `${(report.daysHighSugar / report.totalDays) * 100}%`}}></div>
-              </div>
-              <strong>{report.daysHighSugar} ngày</strong>
-            </div>
-
-            <div className="alert-item">
-              <span>Ăn quá nhiều Chất béo</span>
-              <div className="progress-bar">
-                <div className="fill orange" style={{width: `${(report.daysHighFat / report.totalDays) * 100}%`}}></div>
-              </div>
-              <strong>{report.daysHighFat} ngày</strong>
-            </div>
-
-            <div className="alert-item">
-              <span>Thiếu Chất xơ</span>
-              <div className="progress-bar">
-                <div className="fill gray" style={{width: `${(report.daysLowFiber / report.totalDays) * 100}%`}}></div>
-              </div>
-              <strong>{report.daysLowFiber} ngày</strong>
-            </div>
-             <div className="alert-item">
-              <span>Thiếu Protein</span>
-              <div className="progress-bar">
-                <div className="fill blue" style={{width: `${(report.daysLowProtein / report.totalDays) * 100}%`}}></div>
-              </div>
-              <strong>{report.daysLowProtein} ngày</strong>
-            </div>
+            {[
+              { label: "Thừa năng lượng", val: report.daysCaloriesInMoreThanOut, color: "red" },
+              { label: "Ăn quá nhiều Đường", val: report.daysHighSugar, color: "yellow" },
+              { label: "Ăn quá nhiều Chất béo", val: report.daysHighFat, color: "orange" },
+              { label: "Thiếu Chất xơ", val: report.daysLowFiber, color: "gray" },
+              { label: "Thiếu Protein", val: report.daysLowProtein, color: "blue" },
+            ].map((item, index) => {
+                // Tính phần trăm an toàn (Tránh chia cho 0)
+                const percent = report.totalDays > 0 ? (safeNum(item.val) / report.totalDays) * 100 : 0;
+                
+                return (
+                    <div className="alert-item" key={index}>
+                        <span>{item.label}</span>
+                        <div className="progress-bar">
+                            <div className={`fill ${item.color}`} style={{width: `${percent}%`}}></div>
+                        </div>
+                        <strong>{safeNum(item.val)} ngày</strong>
+                    </div>
+                );
+            })}
           </div>
 
           {/* 4. ĐÁNH GIÁ TỪ HỆ THỐNG */}
           <div className="summary-note">
             <h3>📝 Đánh giá từ chuyên gia AI</h3>
             <div className="note-content">
-              {/* StringBuilder trả về string, hiển thị trực tiếp */}
               "{report.note || "Bạn đang làm rất tốt, hãy duy trì phong độ!"}"
             </div>
           </div>
