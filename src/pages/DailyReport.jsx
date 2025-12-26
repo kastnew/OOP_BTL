@@ -4,18 +4,24 @@ import React, { useState, useEffect } from 'react';
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
 import './DailyReport.css';
 
-const DailyReport = () => {
-  // 2. CẤU HÌNH API (Sửa để dùng biến chung)
-  // const CURRENT_USER_ID = 1; // <-- Đã import ở trên
+// Thêm propDate để nhận từ Calendar và isEmbedded để tùy biến giao diện
+const DailyReport = ({ propDate, isEmbedded = false }) => {
+  // 2. CẤU HÌNH API
   const API_URL = `${API_BASE_URL}/dailysummary`;
 
   // 3. STATE
-  // Lấy ngày đang chọn từ Calendar (nếu có), không thì lấy hôm nay
   const initialDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
-  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [selectedDate, setSelectedDate] = useState(propDate || initialDate);
   
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // 🔄 ĐỒNG BỘ: Cập nhật lại ngày khi Calendar truyền xuống ngày mới
+  useEffect(() => {
+    if (propDate) {
+      setSelectedDate(propDate);
+    }
+  }, [propDate]);
 
   // 4. GỌI API LẤY BÁO CÁO (DailySummary)
   const fetchReport = () => {
@@ -23,9 +29,9 @@ const DailyReport = () => {
     setSummary(null);
 
     fetch(`${API_URL}/${CURRENT_USER_ID}`, {
-      method: 'POST', // Backend dùng PostMapping
+      method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(selectedDate) // Gửi chuỗi ngày "YYYY-MM-DD"
+      body: JSON.stringify(selectedDate) 
     })
     .then(res => {
       if (!res.ok) throw new Error("Lỗi kết nối");
@@ -47,17 +53,21 @@ const DailyReport = () => {
   }, [selectedDate]);
 
   return (
-    <div className="page-container">
-      {/* HEADER: CHỈ CÓ TIÊU ĐỀ VÀ CHỌN NGÀY */}
-      <div className="report-header">
-        <h1>📑 Báo Cáo Tổng Hợp Ngày</h1>
-        <input 
-          type="date" 
-          className="date-picker"
-          value={selectedDate} 
-          onChange={(e) => setSelectedDate(e.target.value)} 
-        />
-      </div>
+    // Sử dụng class khác nếu được nhúng để tránh xung đột layout
+    <div className={isEmbedded ? "report-embedded-content" : "page-container"}>
+      
+      {/* CHỈ HIỂN THỊ HEADER NẾU KHÔNG PHẢI NHÚNG */}
+      {!isEmbedded && (
+        <div className="report-header">
+          <h1>📑 Báo Cáo Tổng Hợp Ngày</h1>
+          <input 
+            type="date" 
+            className="date-picker"
+            value={selectedDate} 
+            onChange={(e) => setSelectedDate(e.target.value)} 
+          />
+        </div>
+      )}
 
       {loading && <p>Đang tải dữ liệu...</p>}
 
@@ -68,7 +78,7 @@ const DailyReport = () => {
         </div>
       )}
 
-      {/* HIỂN THỊ DỮ LIỆU BÁO CÁO (KHÔNG CÓ USER INFO) */}
+      {/* HIỂN THỊ DỮ LIỆU BÁO CÁO */}
       {!loading && summary && (
         <div className="report-content">
           
