@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// --- IMPORT COMPONENTS ---
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Activities from './pages/Activities';
@@ -10,27 +9,24 @@ import Nutrition from './pages/Nutrition';
 import SleepTracker from './pages/SleepTracker';
 import MedicalRecords from './pages/MedicalRecords';
 import Calendar from './pages/Calendar';
-import DailyReport from './pages/DailyReport'; // Mới thêm từ file 2
-import MonthReport from './pages/MonthReport'; // Mới thêm từ file 2
-
-// --- IMPORT AUTH PAGES ---
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import MonthReport from "./pages/MonthReport"; 
+// Lưu ý: Không cần import DailyReport ở đây nữa vì nó đã được nhúng vào Calendar
 
 import './App.css';
 
 function App() {
-  // ⭐ STATE AUTH (Quản lý trạng thái đăng nhập)
-  // Thay vì: const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // Hãy dùng cách này (Lazy initialization):
+  // ⭐ STATE AUTH (Giữ nguyên logic của nhóm bạn)
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     // Kiểm tra ngay khi khởi động app
     return localStorage.getItem("app_is_auth") === "true";
   });
-
-  return (
+ 
+ 
+   return (
     <BrowserRouter>
-      {/* ❗ TRƯỜNG HỢP 1: CHƯA ĐĂNG NHẬP -> Chỉ hiện Login/Signup */}
+      {/* ❗ CHƯA LOGIN: Chỉ được vào trang Login/Signup */}
       {!isAuthenticated ? (
         <Routes>
           <Route
@@ -41,37 +37,37 @@ function App() {
             path="/signup"
             element={<SignupPage setIsAuthenticated={setIsAuthenticated} />}
           />
-          {/* Bất kỳ link lạ nào cũng chuyển về Login */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       ) : (
-        // ✅ TRƯỜNG HỢP 2: ĐÃ ĐĂNG NHẬP -> Vào App chính
+        // ✅ ĐÃ LOGIN: Vào ứng dụng chính
         <div className="app-container">
-          {/* 1. Thanh Menu bên trái */}
           <Sidebar />
 
-          {/* 2. Nội dung chính bên phải */}
           <div className="main-content">
             <Routes>
-              {/* --- Trang Dashboard --- */}
-              {/* Truyền setIsAuthenticated để làm nút Logout */}
-              <Route 
-                path="/" 
-                element={<Dashboard setIsAuthenticated={setIsAuthenticated} />} 
+              {/* Trang chủ - Dashboard */}
+              <Route
+                path="/"
+                element={<Dashboard setIsAuthenticated={setIsAuthenticated} />}
               />
 
-              {/* --- Các trang chức năng (Tự gọi API, không cần truyền props) --- */}
+              {/* Các trang chức năng (Tự quản lý dữ liệu qua API) */}
               <Route path="/activities" element={<Activities />} />
               <Route path="/nutrition" element={<Nutrition />} />
+              
+              {/* TRUNG TÂM NHẬT KÝ: Chứa cả Lịch và Báo cáo ngày bên trong */}
+              <Route path="/calendar" element={<Calendar />} />
+
               <Route path="/sleep" element={<SleepTracker />} />
               <Route path="/medical-records" element={<MedicalRecords />} />
-              <Route path="/calendar" element={<Calendar />} />
               
-              {/* --- Các trang báo cáo --- */}
-              <Route path="/report" element={<DailyReport />} />
+              {/* Trang Báo cáo tháng */}
               <Route path="/month-report" element={<MonthReport />} />
 
-              {/* Link sai -> Quay về Dashboard */}
+              {/* ❌ ĐÃ XÓA: Route "/report" đứng riêng lẻ theo yêu cầu của bạn */}
+
+              {/* Fallback: Chuyển hướng về Dashboard nếu gõ sai URL */}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
