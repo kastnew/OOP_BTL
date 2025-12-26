@@ -2,13 +2,10 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import DailyReport from './DailyReport'; // Import để nhúng báo cáo vào bên dưới
 import './Calendar.css';
 
 const Calendar = () => {
-  // 2. CẤU HÌNH API (Sửa để dùng biến chung)
-  // const CURRENT_USER_ID = 1; // <-- Đã import ở trên
-  // const API_BASE = "http://localhost:8080"; // <-- Thay bằng API_BASE_URL
-
   // 3. STATE
   const [currentMonth, setCurrentMonth] = useState(new Date());
    
@@ -94,7 +91,8 @@ const Calendar = () => {
     return {
       hasAct: dataMap.activities.some(a => a.date === dStr),
       hasMeal: dataMap.meals.some(m => m.date === dStr),
-      hasSleep: dataMap.sleeps.some(s => s.sleepDate === dStr)
+      // Lưu ý: kiểm tra đúng tên trường sleepDate hoặc date tùy backend trả về
+      hasSleep: dataMap.sleeps.some(s => s.sleepDate === dStr || s.date === dStr)
     };
   };
 
@@ -160,8 +158,15 @@ const Calendar = () => {
           })}
         </div>
       </div>
-      
-      {/* ĐÃ XÓA PHẦN SUMMARY CARD Ở DƯỚI */}
+
+      {/* 🚀 PHẦN TÍCH HỢP MỚI: BÁO CÁO CHI TIẾT DƯỚI LỊCH */}
+      <div className="integrated-report-section" style={{ marginTop: '40px', paddingTop: '30px', borderTop: '2px dashed #ddd' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '25px', color: '#2c3e50' }}>
+           📋 Chi tiết báo cáo ngày {selectedDate}
+        </h2>
+        {/* Truyền selectedDate từ lịch xuống cho DailyReport qua propDate */}
+        <DailyReport propDate={selectedDate} isEmbedded={true} />
+      </div>
     </div>
   );
 };
