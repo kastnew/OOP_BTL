@@ -1,0 +1,83 @@
+/* src/components/CalendarPicker.css */
+.calendar-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.calendar-modal-content {
+  background: white;
+  width: 90%;
+  max-width: 380px;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+  animation: calendarSlideUp 0.3s ease-out;
+}
+
+@keyframes calendarSlideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.calendar-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.calendar-modal-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.calendar-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.modal-grid-head {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+  padding-bottom: 10px;
+}
+
+.modal-cell {
+  height: 45px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+}
+
+.modal-cell:hover { background: #f0f0f0; }
+.modal-cell.is-today { border: 2px solid #3498db; }
+
+.modal-dots {
+  display: flex;
+  gap: 2px;
+  position: absolute;
+  bottom: 5px;
+}
+
+.m-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+}
+.dot-act { background: #e67e22; }
+.dot-meal { background: #2ecc71; }
