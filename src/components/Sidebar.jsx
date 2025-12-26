@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import React from 'react';
-import { NavLink } from 'react-router-dom'; // 1. Đổi Link thành NavLink
+import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -11,7 +11,7 @@ const Sidebar = () => {
       </div>
 
       <nav className="menu">
-        {/* 2. Thêm thuộc tính 'end' cho trang chủ để không bị sáng nhầm */}
+        {/* Giữ nguyên các mục phía trên */}
         <NavLink to="/" end className="menu-item">
            🏠 Tổng quan
         </NavLink>
@@ -32,13 +32,12 @@ const Sidebar = () => {
            🏥 Bệnh án điện tử
         </NavLink> 
         
+        {/* Cập nhật mục Lịch: Đây giờ là nơi xem cả Lịch và Báo cáo ngày */}
         <NavLink to="/calendar" className="menu-item">
-            📅 Lịch
+            📅 Nhật ký & Lịch
         </NavLink>
 
-        <NavLink to="/report" className="menu-item">
-            📑 Báo cáo ngày
-        </NavLink>
+        {/* ❌ ĐÃ XÓA MỤC BÁO CÁO NGÀY TẠI ĐÂY ĐỂ TRÁNH DƯ THỪA */}
 
         <NavLink to="/month-report" className="menu-item">
             📅 Báo cáo tháng
