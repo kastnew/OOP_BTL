@@ -1,170 +1,59 @@
 // src/pages/Calendar.jsx
-import React, { useState, useEffect } from 'react';
-// 1. IMPORT FILE CẤU HÌNH CHUNG
-import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
-import DailyReport from './DailyReport'; // Import để nhúng báo cáo vào bên dưới
+import React, { useState } from 'react';
+import DailyReport from './DailyReport'; 
+import CalendarPicker from '../components/CalendarPicker'; 
 import './Calendar.css';
 
 const Calendar = () => {
-  // 3. STATE
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-   
-  // selectedDate: Ngày người dùng click chọn
-  const [selectedDate, setSelectedDate] = useState(() => {
-    return localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
-  });
+  // 1. MẶC ĐỊNH LÀ NGÀY HIỆN TẠI KHI MỚI VÀO
+  // Chúng ta lấy ngày hôm nay làm giá trị khởi tạo thay vì đọc từ localStorage ngay lập tức
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(todayStr);
 
-  // Dữ liệu chỉ dùng để hiện dấu chấm (dots) trên lịch
-  const [dataMap, setDataMap] = useState({ activities: [], meals: [], sleeps: [] });
+  // State điều khiển Modal Lịch
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
-  // --- HELPER ĐỂ TẠO DANH SÁCH NĂM ---
-  const years = Array.from({ length: 11 }, (_, i) => 2020 + i); 
-  const months = Array.from({ length: 12 }, (_, i) => i); 
-
-  // 4. LOAD DỮ LIỆU (Dùng API_BASE_URL)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [resAct, resMeal, resSleep] = await Promise.all([
-          fetch(`${API_BASE_URL}/DailyActivity/${CURRENT_USER_ID}`),
-          fetch(`${API_BASE_URL}/Meal/${CURRENT_USER_ID}`),
-          fetch(`${API_BASE_URL}/Sleep/${CURRENT_USER_ID}`)
-        ]);
-        
-        const acts = await resAct.json();
-        const meals = await resMeal.json();
-        const sleeps = await resSleep.json();
-
-        setDataMap({ 
-          activities: acts || [], 
-          meals: meals || [], 
-          sleeps: sleeps || [] 
-        });
-      } catch (err) {
-        console.error("Lỗi tải dữ liệu lịch:", err);
-      }
-    };
-    fetchData();
-  }, []);
-
-  // 5. XỬ LÝ CHỌN NGÀY
-  const handleDateClick = (dateStr) => {
-    setSelectedDate(dateStr);
-    localStorage.setItem('APP_SELECTED_DATE', dateStr);
-  };
-
-  // --- 6. CÁC HÀM ĐIỀU KHIỂN LỊCH ---
-  const changeMonthOffset = (offset) => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1));
-  };
-
-  const handleMonthSelect = (e) => {
-    const newMonth = parseInt(e.target.value);
-    setCurrentMonth(new Date(currentMonth.getFullYear(), newMonth, 1));
-  };
-
-  const handleYearSelect = (e) => {
-    const newYear = parseInt(e.target.value);
-    setCurrentMonth(new Date(newYear, currentMonth.getMonth(), 1));
-  };
-
-  const jumpToToday = () => {
-    const today = new Date();
-    setCurrentMonth(today);
-    const todayStr = today.toISOString().split('T')[0];
-    handleDateClick(todayStr);
-  };
-
-  // 7. TÍNH TOÁN HIỂN THỊ LƯỚI
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
-  const firstDay = new Date(year, month, 1).getDay(); 
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  const daysArray = [
-    ...Array(firstDay).fill(null), 
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1)
-  ];
-
-  // Kiểm tra ngày có dữ liệu để hiện chấm
-  const checkData = (dStr) => {
-    return {
-      hasAct: dataMap.activities.some(a => a.date === dStr),
-      hasMeal: dataMap.meals.some(m => m.date === dStr),
-      // Lưu ý: kiểm tra đúng tên trường sleepDate hoặc date tùy backend trả về
-      hasSleep: dataMap.sleeps.some(s => s.sleepDate === dStr || s.date === dStr)
-    };
+  // 2. XỬ LÝ KHI NGƯỜI DÙNG CHỌN NGÀY KHÁC TỪ LỊCH
+  const handleDateChange = (newDate) => {
+    setSelectedDate(newDate);
+    // Lưu vào localStorage để các trang khác (Dinh dưỡng, Hoạt động) cũng đồng bộ theo
+    localStorage.setItem('APP_SELECTED_DATE', newDate);
   };
 
   return (
     <div className="page-container">
-      {/* HEADER */}
-      <div className="calendar-top">
-        <div className="header-left">
-             <h1>📅 Lịch Sử</h1>
-             <button className="btn-today" onClick={jumpToToday}>Hôm nay</button>
-        </div>
-
-        <div className="calendar-controls">
-          <button className="nav-btn" onClick={() => changeMonthOffset(-1)}>◀</button>
-          
-          <select value={month} onChange={handleMonthSelect} className="cal-select">
-            {months.map(m => (
-              <option key={m} value={m}>Tháng {m + 1}</option>
-            ))}
-          </select>
-
-          <select value={year} onChange={handleYearSelect} className="cal-select">
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-
-          <button className="nav-btn" onClick={() => changeMonthOffset(1)}>▶</button>
-        </div>
-      </div>
-
-      {/* LƯỚI LỊCH */}
-      <div className="calendar-card">
-        <div className="calendar-grid-header">
-          {['CN','T2','T3','T4','T5','T6','T7'].map(d => (
-            <div key={d} className="cal-head-cell">{d}</div>
-          ))}
+      {/* HEADER TRANG NHẬT KÝ */}
+      <div className="calendar-page-header">
+        <div className="header-left-info">
+          <h1>📅 Nhật Ký Sức Khỏe</h1>
+          <p className="status-label">
+            {selectedDate === todayStr ? (
+              <span className="badge-today">Đang xem: Hôm nay</span>
+            ) : (
+              <span>Đang xem dữ liệu ngày: <strong>{selectedDate}</strong></span>
+            )}
+          </p>
         </div>
         
-        <div className="calendar-grid-body">
-          {daysArray.map((day, index) => {
-            if (!day) return <div key={index} className="cal-cell empty"></div>;
-
-            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-            const isSelected = dateStr === selectedDate;
-            const isToday = dateStr === new Date().toISOString().split('T')[0];
-            const { hasAct, hasMeal, hasSleep } = checkData(dateStr);
-
-            return (
-              <div 
-                key={index} 
-                className={`cal-cell ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`}
-                onClick={() => handleDateClick(dateStr)}
-              >
-                <span className="day-num">{day}</span>
-                <div className="dots-row">
-                  {hasAct && <span className="dot dot-act"></span>}
-                  {hasMeal && <span className="dot dot-meal"></span>}
-                  {hasSleep && <span className="dot dot-sleep"></span>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* NÚT BẤM MỞ LỊCH TRANG KÉP */}
+        <button 
+          className="btn-select-date"
+          onClick={() => setShowCalendarModal(true)}
+        >
+          🔍 Tra cứu ngày khác
+        </button>
       </div>
 
-      {/* 🚀 PHẦN TÍCH HỢP MỚI: BÁO CÁO CHI TIẾT DƯỚI LỊCH */}
-      <div className="integrated-report-section" style={{ marginTop: '40px', paddingTop: '30px', borderTop: '2px dashed #ddd' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '25px', color: '#2c3e50' }}>
-           📋 Chi tiết báo cáo ngày {selectedDate}
-        </h2>
-        {/* Truyền selectedDate từ lịch xuống cho DailyReport qua propDate */}
+      {/* MODAL LỊCH (Chỉ hiện khi bấm nút) */}
+      {showCalendarModal && (
+        <CalendarPicker 
+          onDateSelect={handleDateChange} 
+          onClose={() => setShowCalendarModal(false)} 
+        />
+      )}
+
+      {/* HIỂN THỊ BÁO CÁO CHI TIẾT */}
+      <div className="report-main-view">
         <DailyReport propDate={selectedDate} isEmbedded={true} />
       </div>
     </div>
