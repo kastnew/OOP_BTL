@@ -2,24 +2,27 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import CalendarPicker from '../components/CalendarPicker'; // Thêm Component mới để làm trang kép
 import './Nutrition.css';
 
 const Nutrition = () => {
   const [meals, setMeals] = useState([]);
   const [totalCalories, setTotalCalories] = useState(0);
 
-  // State điều khiển Modal
+  // State điều khiển Modal thêm/sửa món ăn
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
+  // MỚI: State điều khiển Modal Lịch (Trang kép)
+  const [showCalendar, setShowCalendar] = useState(false);
+
   // --- CẤU HÌNH KẾT NỐI (Đã sửa để dùng biến chung) ---
-  // const CURRENT_USER_ID = 1; // <-- Đã import ở trên
   const MEAL_API_URL = `${API_BASE_URL}/Meal`; 
 
-  // --- 1. LẤY NGÀY ĐANG CHỌN TỪ CALENDAR ---
+  // --- 1. LẤY NGÀY ĐANG CHỌN TỪ LOCALSTORAGE ---
   const currentSelectedDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
 
-  // State Form nhập liệu
+  // State Form nhập liệu (Giữ nguyên đầy đủ các trường fiber, sugar của bạn)
   const [formData, setFormData] = useState({
     date: currentSelectedDate, 
     dishName: '',
@@ -52,7 +55,16 @@ const Nutrition = () => {
     setTotalCalories(total);
   }, [meals, currentSelectedDate]); 
 
-  // --- CÁC HÀM ĐIỀU KHIỂN ---
+  // --- MỚI: HÀM XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH ---
+  const handleDateChange = (newDate) => {
+    localStorage.setItem('APP_SELECTED_DATE', newDate);
+    // Cập nhật lại ngày mặc định trong form để khớp với ngày vừa chọn
+    setFormData(prev => ({ ...prev, date: newDate }));
+    // Gọi lại API để đồng bộ dữ liệu của ngày mới
+    fetchMeals();
+  };
+
+  // --- CÁC HÀM ĐIỀU KHIỂN GIỮ NGUYÊN GỐC ---
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -93,7 +105,7 @@ const Nutrition = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // --- GỬI DỮ LIỆU ---
+  // --- GỬI DỮ LIỆU (Giữ nguyên đầy đủ payload của bạn) ---
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -147,13 +159,27 @@ const Nutrition = () => {
 
   return (
     <div className="page-container">
-      <div className="nutrition-header-top">
-        <h1>🥗 Dinh Dưỡng ({currentSelectedDate})</h1>
+      {/* CẬP NHẬT: Tiêu đề có thể click để mở lịch chọn ngày */}
+      <div 
+        className="nutrition-header-top" 
+        onClick={() => setShowCalendar(true)} 
+        style={{cursor: 'pointer'}}
+        title="Bấm để đổi ngày"
+      >
+        <h1>🥗 Dinh Dưỡng ({currentSelectedDate}) 📅</h1>
         <div className="total-box">
           <span>Đã nạp:</span>
           <strong>{totalCalories} kcal</strong>
         </div>
       </div>
+
+      {/* HIỂN THỊ MODAL LỊCH (TRANG KÉP) */}
+      {showCalendar && (
+        <CalendarPicker 
+          onDateSelect={handleDateChange} 
+          onClose={() => setShowCalendar(false)} 
+        />
+      )}
 
       <div className="meal-list">
         {filteredMeals.map((item) => (
