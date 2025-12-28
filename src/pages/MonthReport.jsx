@@ -2,26 +2,57 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import CalendarPicker from '../components/CalendarPicker'; 
 import './MonthReport.css';
 
 const MonthReport = () => {
-  // 2. CẤU HÌNH API
   const API_URL = `${API_BASE_URL}/monthsummary`;
 
-  // Mặc định chọn tháng hiện tại
-  const now = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  // --- CÁC HẰNG SỐ ĐỊNH MỨC (Dùng để so sánh) ---
+  const THRESHOLDS = {
+    sugarMax: 50,   // Tối đa 50g
+    fatMax: 70,     // Tối đa 70g
+    fiberMin: 25,   // Tối thiểu 25g
+    proteinMin: 60  // Tối thiểu 60g
+  };
+
+  // --- STATE VỚI PERSISTENCE ---
+  const getInitialMonth = () => {
+    const saved = localStorage.getItem('REPORT_SELECTED_MONTH');
+    return saved ? parseInt(saved) : new Date().getMonth() + 1;
+  };
+  const getInitialYear = () => {
+    const saved = localStorage.getItem('REPORT_SELECTED_YEAR');
+    return saved ? parseInt(saved) : new Date().getFullYear();
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth());
+  const [selectedYear, setSelectedYear] = useState(getInitialYear());
   
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('REPORT_SELECTED_MONTH', selectedMonth);
+    localStorage.setItem('REPORT_SELECTED_YEAR', selectedYear);
+  }, [selectedMonth, selectedYear]);
 
   // --- HÀM AN TOÀN ---
   const safeNum = (num) => {
     return (num === null || num === undefined || isNaN(num)) ? 0 : num;
   };
 
-  // Gọi API lấy báo cáo tháng
+  // --- XỬ LÝ CHỌN NGÀY TỪ LỊCH ---
+  const handleDateChange = (newDateStr) => {
+    localStorage.setItem('APP_SELECTED_DATE', newDateStr);
+    const date = new Date(newDateStr);
+    if (!isNaN(date.getTime())) {
+        setSelectedMonth(date.getMonth() + 1);
+        setSelectedYear(date.getFullYear());
+    }
+  };
+
+  // --- GỌI API ---
   const fetchMonthReport = () => {
     setLoading(true);
     setReport(null);
@@ -37,7 +68,6 @@ const MonthReport = () => {
       body: JSON.stringify(requestBody)
     })
     .then(res => {
-      // Backend mới đã xử lý lỗi, nên dù trả về 200 OK vẫn cần check nội dung
       if (!res.ok) throw new Error("Lỗi kết nối");
       return res.text();
     })
@@ -45,9 +75,8 @@ const MonthReport = () => {
       if (text) {
         try {
             const data = JSON.parse(text);
-            // Hiển thị nếu có dữ liệu (totalDays > 0) HOẶC nếu đối tượng data hợp lệ
-            // (Đôi khi totalDays = 1 nhưng số liệu = 0 vẫn cần hiển thị)
-            if (data && typeof data.totalDays === 'number' && data.totalDays > 0) {
+            // Logic hiển thị: Chỉ cần data tồn tại (dù totalDays = 0 do lỗi tính toán cũ) vẫn hiển thị
+            if (data) {
                 setReport(data);
             } else {
                 setReport(null);
@@ -73,11 +102,36 @@ const MonthReport = () => {
 
   const years = Array.from({ length: 8 }, (_, i) => 2023 + i);
 
+  // --- HÀM HELPER ĐỂ SO SÁNH DINH DƯỠNG ---
+  const getNutritionStatus = (type, value) => {
+    const val = safeNum(value);
+    switch(type) {
+        case 'sugar':
+            return val > THRESHOLDS.sugarMax 
+                ? { text: `Vượt mức (> ${THRESHOLDS.sugarMax}g)`, color: '#e74c3c' } // Đỏ
+                : { text: 'An toàn', color: '#27ae60' }; // Xanh
+        case 'fat':
+            return val > THRESHOLDS.fatMax 
+                ? { text: `Vượt mức (> ${THRESHOLDS.fatMax}g)`, color: '#e74c3c' }
+                : { text: 'An toàn', color: '#27ae60' };
+        case 'fiber':
+            return val < THRESHOLDS.fiberMin 
+                ? { text: `Thiếu (< ${THRESHOLDS.fiberMin}g)`, color: '#f39c12' } // Cam
+                : { text: 'Đạt chuẩn', color: '#27ae60' };
+        case 'protein':
+            return val < THRESHOLDS.proteinMin 
+                ? { text: `Thiếu (< ${THRESHOLDS.proteinMin}g)`, color: '#f39c12' }
+                : { text: 'Đạt chuẩn', color: '#27ae60' };
+        default: return { text: '', color: '#333' };
+    }
+  };
+
   return (
     <div className="page-container">
+      
+      {/* HEADER */}
       <div className="month-header">
         <h1>📅 Báo Cáo Tháng {selectedMonth}/{selectedYear}</h1>
-        
         <div className="month-selector">
           <div className="selector-group">
             <label>Tháng:</label>
@@ -87,7 +141,6 @@ const MonthReport = () => {
               ))}
             </select>
           </div>
-
           <div className="selector-group" style={{marginLeft: '15px'}}>
              <label>Năm:</label>
              <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
@@ -99,19 +152,20 @@ const MonthReport = () => {
         </div>
       </div>
 
+      <CalendarPicker onDateSelect={handleDateChange} />
+
       {loading && <p>Đang phân tích dữ liệu...</p>}
 
       {!loading && !report && (
         <div className="empty-state">
           <p>📭 Không có dữ liệu tổng hợp cho <strong>Tháng {selectedMonth}/{selectedYear}</strong>.</p>
-          <small>Hệ thống sẽ tự động tổng hợp khi bạn có hoạt động trong tháng này.</small>
         </div>
       )}
 
       {!loading && report && (
         <div className="month-content">
           
-          {/* 1. THẺ TỔNG QUAN */}
+          {/* 1. CALO TRUNG BÌNH (Giữ nguyên) */}
           <div className="section-title">📊 Trung Bình Mỗi Ngày</div>
           <div className="avg-grid">
             <div className="avg-card calo-in">
@@ -128,56 +182,87 @@ const MonthReport = () => {
             </div>
           </div>
 
-          {/* 2. DINH DƯỠNG */}
-          <div className="section-title">🥗 Dinh Dưỡng Trung Bình</div>
-          <div className="macros-row">
-            <div className="macro-box">
-              <span className="dot p"></span> Protein
-              <strong>{safeNum(report.avgProtein).toFixed(1)}g</strong>
-            </div>
-            <div className="macro-box">
-              <span className="dot f"></span> Chất béo
-              <strong>{safeNum(report.avgFat).toFixed(1)}g</strong>
-            </div>
-            <div className="macro-box">
-              <span className="dot s"></span> Đường
-              <strong>{safeNum(report.avgSugar).toFixed(1)}g</strong>
-            </div>
-            <div className="macro-box">
-              <span className="dot fib"></span> Chất xơ
-              <strong>{safeNum(report.avgFiber).toFixed(1)}g</strong>
-            </div>
-          </div>
-
-          {/* 3. THỐNG KÊ CẢNH BÁO */}
-          <div className="section-title">⚠️ Thống Kê Cảnh Báo ({safeNum(report.totalDays)} ngày dữ liệu)</div>
-          <div className="alerts-grid">
-            {[
-              { label: "Thừa năng lượng", val: report.daysCaloriesInMoreThanOut, color: "red" },
-              { label: "Ăn quá nhiều Đường", val: report.daysHighSugar, color: "yellow" },
-              { label: "Ăn quá nhiều Chất béo", val: report.daysHighFat, color: "orange" },
-              { label: "Thiếu Chất xơ", val: report.daysLowFiber, color: "gray" },
-              { label: "Thiếu Protein", val: report.daysLowProtein, color: "blue" },
-            ].map((item, index) => {
-                const percent = report.totalDays > 0 ? (safeNum(item.val) / report.totalDays) * 100 : 0;
-                return (
-                    <div className="alert-item" key={index}>
-                        <span>{item.label}</span>
-                        <div className="progress-bar">
-                            <div className={`fill ${item.color}`} style={{width: `${percent}%`}}></div>
+          {/* 2. DINH DƯỠNG (DẠNG LIỆT KÊ & SO SÁNH) - Yêu cầu mới */}
+          <div className="section-title">🥗 Đánh Giá Dinh Dưỡng Trung Bình</div>
+          <div className="nutrition-list-card" style={{background: 'white', padding: '20px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '30px'}}>
+             {[
+               { key: 'protein', label: 'Protein (Đạm)', val: report.avgProtein, icon: '🥩' },
+               { key: 'fat', label: 'Chất béo', val: report.avgFat, icon: '🥑' },
+               { key: 'sugar', label: 'Đường', val: report.avgSugar, icon: '🍬' },
+               { key: 'fiber', label: 'Chất xơ', val: report.avgFiber, icon: '🥦' },
+             ].map((item) => {
+                 const status = getNutritionStatus(item.key, item.val);
+                 return (
+                    <div key={item.key} style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #eee'}}>
+                        <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                            <span style={{fontSize: '1.2rem'}}>{item.icon}</span>
+                            <span style={{fontWeight: '600', color: '#555'}}>{item.label}</span>
                         </div>
-                        <strong>{safeNum(item.val)} ngày</strong>
+                        <div style={{textAlign: 'right'}}>
+                            <div style={{fontSize: '1.1rem', fontWeight: 'bold'}}>{safeNum(item.val).toFixed(1)}g</div>
+                            <small style={{color: status.color, fontWeight: '600'}}>{status.text}</small>
+                        </div>
                     </div>
-                );
-            })}
+                 )
+             })}
           </div>
 
-          {/* 4. ĐÁNH GIÁ */}
-          <div className="summary-note">
-            <h3>📝 Đánh giá từ chuyên gia AI</h3>
-            <div className="note-content">
-              "{report.note || "Hãy tiếp tục duy trì hoạt động!"}"
-            </div>
+          {/* 3. THỐNG KÊ CẢNH BÁO (BIỂU ĐỒ CỘT 5 CỘT) - Yêu cầu mới */}
+          <div className="section-title">⚠️ Biểu Đồ Cảnh Báo ({safeNum(report.totalDays)} ngày)</div>
+          <div className="chart-container" style={{
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', 
+              height: '220px', background: '#fff', padding: '20px', borderRadius: '12px', 
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '30px'
+          }}>
+             {[
+               { label: 'Dư Calo', val: report.daysCaloriesInMoreThanOut, color: '#e74c3c' },
+               { label: 'Dư Đường', val: report.daysHighSugar, color: '#f1c40f' },
+               { label: 'Dư Béo', val: report.daysHighFat, color: '#e67e22' },
+               { label: 'Thiếu Xơ', val: report.daysLowFiber, color: '#95a5a6' },
+               { label: 'Thiếu Đạm', val: report.daysLowProtein, color: '#3498db' },
+             ].map((item, idx) => {
+                 // Tính chiều cao cột dựa trên tổng số ngày trong tháng (hoặc mặc định 30 nếu totalDays=0)
+                 const total = report.totalDays > 0 ? report.totalDays : 30;
+                 const percent = Math.min((safeNum(item.val) / total) * 100, 100);
+                 
+                 return (
+                    <div key={idx} style={{display:'flex', flexDirection:'column', alignItems:'center', width: '18%', height: '100%', justifyContent: 'flex-end'}}>
+                        {/* Số ngày hiển thị trên đầu cột */}
+                        <span style={{fontSize:'0.9rem', fontWeight:'bold', marginBottom:'5px', color: item.color}}>
+                            {safeNum(item.val)}
+                        </span>
+                        
+                        {/* Cột */}
+                        <div style={{
+                            width: '60%', 
+                            height: `${percent}%`, 
+                            background: item.color, 
+                            borderRadius: '6px 6px 0 0',
+                            transition: 'height 0.5s ease',
+                            minHeight: '4px' // Để vẫn hiện thị vạch nhỏ nếu 0 ngày
+                        }}></div>
+                        
+                        {/* Nhãn dưới chân cột */}
+                        <span style={{marginTop:'8px', fontSize:'0.75rem', color:'#555', textAlign: 'center', lineHeight: '1.2'}}>
+                            {item.label}
+                        </span>
+                    </div>
+                 )
+             })}
+          </div>
+
+          {/* 4. ĐÁNH GIÁ (TỐI ƯU KHÔNG GIAN) - Yêu cầu mới */}
+          <div className="section-title">📝 Lời Khuyên</div>
+          <div className="summary-compact" style={{
+              background: '#eef2f7', padding: '15px', borderRadius: '8px', 
+              borderLeft: '4px solid #4a90e2', fontSize: '0.95rem', color: '#2c3e50'
+          }}>
+              {report.note 
+                ? report.note.split('.').map((sentence, index) => (
+                    sentence.trim() && <div key={index} style={{marginBottom: '4px'}}>• {sentence.trim()}</div>
+                  ))
+                : "Duy trì chế độ sinh hoạt hiện tại."
+              }
           </div>
 
         </div>

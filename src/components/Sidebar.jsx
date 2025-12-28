@@ -33,7 +33,7 @@ const Sidebar = () => {
         </NavLink> 
         
         <NavLink to="/daily-report" className="menu-item">
-            📑 Báo Cáo Ngày
+            📑 Báo cáo ngày
         </NavLink>
 
         <NavLink to="/month-report" className="menu-item">
