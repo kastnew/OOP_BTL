@@ -12,12 +12,11 @@ import DailyReport from './pages/DailyReport';
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import MonthReport from "./pages/MonthReport"; 
-// Lưu ý: Không cần import DailyReport ở đây nữa vì nó đã được nhúng vào Calendar
 
 import './App.css';
 
 function App() {
-  // ⭐ STATE AUTH (Giữ nguyên logic của nhóm bạn)
+  // ⭐ STATE AUTH 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     // Kiểm tra ngay khi khởi động app
     return localStorage.getItem("app_is_auth") === "true";

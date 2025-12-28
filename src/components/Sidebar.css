@@ -31,7 +31,7 @@
 /* ===== MENU ACTIVE (PHẦN QUAN TRỌNG CẦN THÊM) ===== */
 /* Đây là phần giúp menu sáng đèn khi đang chọn */
 .menu-item.active {
-  background-color: #1abc9c; /* Màu xanh ngọc (Green Sea) */
+  background-color: #1abc9c;
   color: white;
   font-weight: bold;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Thêm chút bóng cho đẹp */

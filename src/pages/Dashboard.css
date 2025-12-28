@@ -68,8 +68,6 @@
   color: white; font-size: 12px; font-weight: bold; margin-top: 5px;
 }
 
-/* --- (ĐÃ XÓA PHẦN STYLE CALO VÌ DASHBOARD.JSX KHÔNG CÒN DÙNG) --- */
-
 /* --- Modal chỉnh sửa --- */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;

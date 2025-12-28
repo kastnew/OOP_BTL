@@ -11,8 +11,6 @@ const Activities = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // ❌ ĐÃ XÓA: const [showCalendar, setShowCalendar] ... (Không cần nữa)
-
   // Cấu hình URL
   const ACTIVITIES_API_URL = `${API_BASE_URL}/DailyActivity`; 
 
@@ -146,7 +144,6 @@ const Activities = () => {
 
   return (
     <div className="page-container">
-      {/* HEADER: Đã bỏ chức năng bấm vào để mở lịch (Clean hơn) */}
       <div className="activities-header-top">
         <h1>🏃 Hoạt Động ({currentSelectedDate})</h1>
         <div className="total-burned-box">

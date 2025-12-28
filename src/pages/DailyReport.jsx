@@ -88,15 +88,27 @@ const DailyReport = () => {
     return stars;
   };
 
+  // ✅ MỚI: Hàm chuyển đổi phút sang giờ và phút
+  const formatDuration = (minutes) => {
+    if (!minutes || minutes <= 0) return "";
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.floor(minutes % 60); // Đảm bảo làm tròn số nguyên
+    
+    if (hours > 0) {
+        return `(≈ ${hours} giờ ${mins} phút)`;
+    }
+    return `(${mins} phút)`;
+  };
+
   return (
     <div className="page-container">
       
-      {/* HEADER: Đơn giản, chỉ hiện tiêu đề ngày */}
+      {/* HEADER */}
       <div className="report-header">
         <h1>📑 Báo Cáo Ngày ({selectedDate})</h1>
       </div>
 
-      {/* WIDGET LỊCH (Luôn hiển thị ở góc) */}
+      {/* WIDGET LỊCH */}
       <CalendarPicker onDateSelect={handleDateChange} />
 
       {/* LOADING */}
@@ -138,35 +150,49 @@ const DailyReport = () => {
             <h3>🥗 Dinh Dưỡng Chi Tiết</h3>
             <div className="macros-grid">
               <div className="macro-item">
-                <span className="dot protein"></span>
+                <span className="nutrient-icon" style={{fontSize: '24px'}}>🥩</span>
                 <p>Protein</p>
                 <strong>{summary.totalProtein?.toFixed(1) || 0}g</strong>
               </div>
               <div className="macro-item">
-                <span className="dot fat"></span>
+                <span className="nutrient-icon" style={{fontSize: '24px'}}>🥑</span>
                 <p>Chất béo</p>
                 <strong>{summary.totalFat?.toFixed(1) || 0}g</strong>
               </div>
               <div className="macro-item">
-                <span className="dot fiber"></span>
+                <span className="nutrient-icon" style={{fontSize: '24px'}}>🥦</span>
                 <p>Chất xơ</p>
                 <strong>{summary.totalFiber?.toFixed(1) || 0}g</strong>
               </div>
               <div className="macro-item">
-                <span className="dot sugar"></span>
+                <span className="nutrient-icon" style={{fontSize: '24px'}}>🍬</span>
                 <p>Đường</p>
                 <strong>{summary.totalSugar?.toFixed(1) || 0}g</strong>
               </div>
             </div>
           </div>
 
-          {/* 3. Thời gian & Đánh giá */}
+          {/* 3. Thời gian & Đánh giá (Đã sửa format thời gian và rating) */}
           <div className="report-row">
             <div className="report-col">
               <h3>⏱️ Thời Gian Hoạt Động</h3>
               <ul className="time-list">
-                <li>🏃 Vận động thể chất: <strong>{summary.totalActivityTime || 0} phút</strong></li>
-                <li>🛌 Thời gian nghỉ ngơi: <strong>{summary.totalRestTime || 0} phút</strong></li>
+                <li>
+                    🏃 Vận động thể chất: 
+                    <strong> {summary.totalActivityTime || 0} phút </strong>
+                    {/* ✅ Hiển thị quy đổi giờ phút */}
+                    <span style={{fontSize: '0.9em', color: '#666', fontWeight: 'normal'}}>
+                        {formatDuration(summary.totalActivityTime)}
+                    </span>
+                </li>
+                <li>
+                    🛌 Thời gian nghỉ ngơi: 
+                    <strong> {summary.totalRestTime || 0} phút </strong>
+                    {/* ✅ Hiển thị quy đổi giờ phút */}
+                    <span style={{fontSize: '0.9em', color: '#666', fontWeight: 'normal'}}>
+                        {formatDuration(summary.totalRestTime)}
+                    </span>
+                </li>
               </ul>
             </div>
             
@@ -176,7 +202,10 @@ const DailyReport = () => {
                 <div style={{fontSize: '1.5rem', marginBottom: '5px'}}>
                     {renderStars(summary.rating)}
                 </div>
-                <span className="rating-score">{summary.rating ? summary.rating.toFixed(1) : 0}/5</span>
+                {/* ✅ Sửa hiển thị rating thành x/5.0 */}
+                <span className="rating-score">
+                    {summary.rating ? summary.rating.toFixed(1) : '0.0'}/5.0
+                </span>
                 
                 <p className="rating-note" style={{marginTop: '10px', fontStyle: 'italic', color: '#666'}}>
                     "{summary.notes || 'Chưa có đánh giá chi tiết'}"
