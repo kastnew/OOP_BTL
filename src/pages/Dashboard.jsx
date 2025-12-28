@@ -1,14 +1,15 @@
 // src/pages/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
-// 1. IMPORT CONFIG ĐỂ CHẠY MẠNG LAN
+// 1. IMPORT CONFIG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import CalendarPicker from '../components/CalendarPicker'; // ✅ Thêm Widget Lịch
 import './Dashboard.css';
 
-// Nhận prop setIsAuthenticated để xử lý đăng xuất
 const Dashboard = ({ setIsAuthenticated }) => {
   
   // 2. CẤU HÌNH API
   const USER_API_URL = `${API_BASE_URL}/test`;
+  const HEALTH_API_URL = `${API_BASE_URL}/healthincators`;
 
   // 3. STATE
   const [userInfo, setUserInfo] = useState({
@@ -16,40 +17,71 @@ const Dashboard = ({ setIsAuthenticated }) => {
     lastName: '', 
     age: '', 
     gender: 'Nam',
+    // Các chỉ số sức khỏe sẽ lấy từ API HealthIndicators
     height: '', 
     weight: '', 
     heartRate: '', 
-    bloodPressure: ''
+    bloodPressure: '',
+    indicatorId: null // Lưu ID để dùng cho việc Update (nếu có bản ghi cũ)
   });
 
   const [bmi, setBmi] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({});
 
-  // 4. LOAD DỮ LIỆU USER TỪ BACKEND
+  // 4. LOAD DỮ LIỆU TỪ 2 NGUỒN (User + HealthIndicators)
   useEffect(() => {
-    fetch(`${USER_API_URL}/${CURRENT_USER_ID}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data) {
-          setUserInfo(prev => ({
-            ...prev,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            age: data.age,
-            gender: data.gender,
-            // Các chỉ số sức khỏe giữ nguyên giá trị cũ (nếu backend chưa có)
-          }));
+    const fetchData = async () => {
+        try {
+            // Gọi song song 2 API để tối ưu tốc độ
+            const [userRes, healthRes] = await Promise.all([
+                fetch(`${USER_API_URL}/${CURRENT_USER_ID}`),
+                fetch(`${HEALTH_API_URL}/${CURRENT_USER_ID}`)
+            ]);
+
+            const userData = userRes.ok ? await userRes.json() : null;
+            const healthDataList = healthRes.ok ? await healthRes.json() : [];
+            
+            // Lấy bản ghi sức khỏe mới nhất (nếu list trả về nhiều bản ghi)
+            // Giả sử API trả về list, ta lấy phần tử cuối cùng hoặc đầu tiên tùy logic backend
+            // Ở đây giả định lấy phần tử mới nhất (ví dụ phần tử cuối cùng)
+            const healthData = healthDataList.length > 0 ? healthDataList[healthDataList.length - 1] : null;
+
+            setUserInfo(prev => ({
+                ...prev,
+                // Dữ liệu từ User API
+                firstName: userData?.firstName || '',
+                lastName: userData?.lastName || '',
+                age: userData?.age || '',
+                gender: userData?.gender || 'Nam',
+                
+                // Dữ liệu từ HealthIndicators API
+                height: healthData?.height || '',
+                weight: healthData?.weight || '',
+                heartRate: healthData?.heartRate || '',
+                bloodPressure: healthData?.bloodPressure || '',
+                indicatorId: healthData?.indicatorId || null // Quan trọng để biết là Create hay Update
+            }));
+
+        } catch (error) {
+            console.error("Lỗi tải dữ liệu Dashboard:", error);
         }
-      })
-      .catch(err => console.error("Lỗi tải thông tin User:", err));
+    };
+
+    fetchData();
   }, []);
 
-  // 5. TÍNH BMI TỰ ĐỘNG
+  // 5. TÍNH BMI TỰ ĐỘNG (Frontend Calculation)
   useEffect(() => {
     if (userInfo.weight && userInfo.height) {
-      const bmiValue = userInfo.weight / (userInfo.height * userInfo.height);
-      setBmi(bmiValue.toFixed(2));
+      // Chiều cao thường nhập là mét (ví dụ 1.75), nếu nhập cm (175) cần chia 100
+      // Kiểm tra logic nhập liệu của bạn. Ở đây giả định nhập mét.
+      const h = parseFloat(userInfo.height);
+      const w = parseFloat(userInfo.weight);
+      if (h > 0) {
+          const bmiValue = w / (h * h);
+          setBmi(bmiValue.toFixed(2));
+      }
     }
   }, [userInfo.weight, userInfo.height]);
 
@@ -66,10 +98,11 @@ const Dashboard = ({ setIsAuthenticated }) => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // --- LƯU THÔNG TIN (GỌI API PATCH) ---
-  const handleSave = (e) => {
+  // --- LƯU THÔNG TIN (GỌI 2 API RIÊNG BIỆT) ---
+  const handleSave = async (e) => {
     e.preventDefault();
 
+    // 1. Cập nhật thông tin cơ bản (User API)
     const userPayload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -77,21 +110,51 @@ const Dashboard = ({ setIsAuthenticated }) => {
         gender: formData.gender
     };
 
-    fetch(`${USER_API_URL}/up/${CURRENT_USER_ID}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userPayload)
-    })
-    .then(res => {
-        if (res.ok) {
-            setUserInfo(formData);
-            setShowModal(false);
-            alert("Cập nhật thông tin thành công!");
-        } else {
-            alert("Lỗi khi lưu thông tin!");
+    // 2. Cập nhật chỉ số sức khỏe (HealthIndicator API)
+    const healthPayload = {
+        userId: CURRENT_USER_ID,
+        height: parseFloat(formData.height),
+        weight: parseFloat(formData.weight),
+        heartRate: parseFloat(formData.heartRate),
+        bloodPressure: parseFloat(formData.bloodPressure),
+        bmi: parseFloat(bmi), // Gửi BMI đã tính lên (nếu backend cần lưu)
+        healthStatus: "Normal" // Có thể tính toán dựa trên BMI nếu cần
+    };
+
+    try {
+        // Gọi API User
+        await fetch(`${USER_API_URL}/up/${CURRENT_USER_ID}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userPayload)
+        });
+
+        // Gọi API HealthIndicator
+        // Nếu đã có indicatorId -> Gọi Update (/up), nếu chưa -> Gọi Create (/create)
+        const healthUrl = formData.indicatorId 
+            ? `${HEALTH_API_URL}/up` 
+            : `${HEALTH_API_URL}/create`;
+        
+        // Nếu update cần gửi kèm indicatorId
+        if (formData.indicatorId) {
+            healthPayload.indicatorId = formData.indicatorId;
         }
-    })
-    .catch(err => console.error("Lỗi save:", err));
+
+        await fetch(healthUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(healthPayload)
+        });
+
+        // Cập nhật lại UI sau khi lưu thành công
+        setUserInfo(formData);
+        setShowModal(false);
+        alert("Cập nhật thông tin thành công!");
+
+    } catch (error) {
+        console.error("Lỗi khi lưu:", error);
+        alert("Có lỗi xảy ra khi lưu thông tin.");
+    }
   };
 
   const getBMIStatus = (bmi) => {
@@ -103,15 +166,19 @@ const Dashboard = ({ setIsAuthenticated }) => {
 
   const bmiStatus = getBMIStatus(bmi);
 
-  // --- HÀM XỬ LÝ ĐĂNG XUẤT (FIX LOGIC LOCALSTORAGE) ---
+  // --- HÀM XỬ LÝ ĐĂNG XUẤT ---
   const handleLogout = () => {
-    // 1. Xóa trạng thái lưu trong bộ nhớ trình duyệt
     localStorage.removeItem("app_is_auth");
-    
-    // 2. Cập nhật state để React chuyển về màn hình Login
     if (typeof setIsAuthenticated === 'function') {
         setIsAuthenticated(false);
     }
+  };
+
+  // Hàm xử lý khi chọn ngày từ lịch (Dashboard thường chỉ hiển thị, ít khi đổi ngày để xem lại lịch sử chỉ số cơ thể, nhưng vẫn thêm để đồng bộ)
+  const handleDateChange = (newDate) => {
+    localStorage.setItem('APP_SELECTED_DATE', newDate);
+    // Có thể thêm logic load lại dữ liệu theo ngày nếu Backend hỗ trợ lịch sử cân nặng theo ngày
+    window.location.reload();
   };
 
   return (
@@ -119,15 +186,13 @@ const Dashboard = ({ setIsAuthenticated }) => {
       <div className="dashboard-header">
         <h1>👋 Tổng Quan Sức Khỏe</h1>
         <div className="header-actions">
-          {/* Nút Cập nhật */}
           <button className="btn-edit-profile" onClick={handleEditClick}>
             ⚙️ Cập nhật thông tin
           </button>
           
-          {/* Nút Đăng xuất (Đã sửa logic) */}
           <button
             className="btn-logout"
-            onClick={handleLogout} // Gọi hàm handleLogout thay vì viết inline
+            onClick={handleLogout}
             style={{
                 marginLeft: '10px',
                 backgroundColor: '#c0392b',
@@ -144,7 +209,10 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </div>
       </div>
 
-      {/* THÔNG TIN CÁ NHÂN (Lấy từ Backend) */}
+      {/* ✅ WIDGET LỊCH (Xuyên suốt) */}
+      <CalendarPicker onDateSelect={handleDateChange} />
+
+      {/* THÔNG TIN CÁ NHÂN */}
       <div className="user-profile-card">
         <div className="avatar-circle">
           {userInfo.lastName ? userInfo.lastName.charAt(0) : 'U'}
@@ -221,7 +289,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                 </div>
               </div>
 
-              <h4 className="form-section-title">Chỉ số cơ thể (Lưu tại trình duyệt)</h4>
+              <h4 className="form-section-title">Chỉ số sức khỏe (Health Indicators)</h4>
               <div className="form-row">
                 <div className="form-group">
                   <label>Chiều cao (m)</label>

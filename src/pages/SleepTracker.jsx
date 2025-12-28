@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
-import CalendarPicker from '../components/CalendarPicker'; // (Từ code đồng nghiệp)
+import CalendarPicker from '../components/CalendarPicker'; // ✅ Thêm Component lịch
 import './SleepTracker.css';
 
 const SleepTracker = () => {
@@ -11,9 +11,6 @@ const SleepTracker = () => {
   // State điều khiển Modal thêm/sửa
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
-  // MỚI: State điều khiển Modal Lịch (Từ code đồng nghiệp)
-  const [showCalendar, setShowCalendar] = useState(false);
 
   // --- CẤU HÌNH KẾT NỐI ---
   const SLEEP_API_URL = `${API_BASE_URL}/Sleep`;
@@ -30,16 +27,13 @@ const SleepTracker = () => {
     sleepQuality: 'Tốt'
   });
 
-  // --- HÀM HỖ TRỢ CHUYỂN ĐỔI THỜI GIAN (GIỮ CỦA BẠN - ĐỂ KHỚP BACKEND) ---
+  // --- HÀM HỖ TRỢ CHUYỂN ĐỔI THỜI GIAN ---
   
-  // 1. Chuyển từ Backend (YYYY-MM-DDTHH:mm:ss) sang Input (YYYY-MM-DDTHH:mm)
   const formatToInputDateTime = (isoString) => {
     if (!isoString) return '';
     return isoString.substring(0, 16); 
   };
 
-  // 2. Chuyển từ Input (YYYY-MM-DDTHH:mm) sang Backend (YYYY-MM-DDTHH:mm:ss)
-  // Logic này quan trọng để giữ đúng giờ địa phương cho Backend Java LocalDatetime
   const formatToBackendDate = (localDateTimeInput) => {
     if (!localDateTimeInput) return null;
     return `${localDateTimeInput}:00`; 
@@ -57,12 +51,12 @@ const SleepTracker = () => {
     fetchSleeps();
   }, []);
 
-  // --- MỚI: XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH (Từ code đồng nghiệp) ---
+  // --- MỚI: XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH WIDGET ---
   const handleDateChange = (newDate) => {
     localStorage.setItem('APP_SELECTED_DATE', newDate);
     // Cập nhật lại ngày mặc định trong form để khớp ngày chọn
     setFormData(prev => ({ ...prev, sleepDate: newDate }));
-    // Reload nhẹ để cập nhật toàn bộ ứng dụng theo ngày mới
+    // Reload để đồng bộ dữ liệu
     window.location.reload(); 
   };
 
@@ -102,7 +96,7 @@ const SleepTracker = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // --- GỬI DỮ LIỆU (Dùng logic V2 của bạn để khớp Backend) ---
+  // --- GỬI DỮ LIỆU ---
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -111,13 +105,11 @@ const SleepTracker = () => {
         sleepDate: formData.sleepDate,
         sleepType: formData.sleepType,
         sleepQuality: formData.sleepQuality,
-        // Dùng hàm format V2 (thêm :00)
         sleepTime: formatToBackendDate(formData.sleepTime),
         wakeTime: formatToBackendDate(formData.wakeTime)
     };
 
     if (editingId) {
-      // SỬA: Backend mapping @PostMapping("/up") -> Không có ID trên URL
       const updatePayload = { ...payload, sleepId: editingId };
       fetch(`${SLEEP_API_URL}/up`, {
         method: 'POST', 
@@ -129,7 +121,6 @@ const SleepTracker = () => {
       });
 
     } else {
-      // THÊM MỚI
       fetch(`${SLEEP_API_URL}/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -152,7 +143,6 @@ const SleepTracker = () => {
     }
   };
 
-  // Hàm hiển thị ngày giờ đẹp
   const formatDisplayTime = (isoString) => {
     if (!isoString) return "---";
     try {
@@ -167,23 +157,13 @@ const SleepTracker = () => {
 
   return (
     <div className="page-container">
-      {/* 🟢 PHẦN TIÊU ĐỀ TÍCH HỢP MỞ LỊCH (Từ code đồng nghiệp) */}
-      <div 
-        className="sleep-header-top" 
-        onClick={() => setShowCalendar(true)} 
-        style={{cursor: 'pointer'}}
-        title="Bấm để đổi ngày"
-      >
-        <h1>🌙 Theo Dõi Giấc Ngủ ({currentSelectedDate}) 📅</h1>
+      {/* HEADER: Đơn giản hóa, bỏ sự kiện click */}
+      <div className="sleep-header-top">
+        <h1>🌙 Theo Dõi Giấc Ngủ ({currentSelectedDate})</h1>
       </div>
 
-      {/* 🟢 HIỂN THỊ MODAL LỊCH (Từ code đồng nghiệp) */}
-      {showCalendar && (
-        <CalendarPicker 
-          onDateSelect={handleDateChange} 
-          onClose={() => setShowCalendar(false)} 
-        />
-      )}
+      {/* ✅ LỊCH WIDGET (Luôn hiển thị) */}
+      <CalendarPicker onDateSelect={handleDateChange} />
 
       {/* DANH SÁCH GIẤC NGỦ */}
       <div className="sleep-list">

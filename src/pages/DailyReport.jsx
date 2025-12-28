@@ -1,45 +1,35 @@
 // src/pages/DailyReport.jsx
 import React, { useState, useEffect } from 'react';
-// 1. IMPORT FILE CẤU HÌNH CHUNG
+// 1. IMPORT CONFIG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import CalendarPicker from '../components/CalendarPicker'; // Widget Lịch nổi
 import './DailyReport.css';
 
-// Thêm propDate để nhận từ Calendar và isEmbedded để tùy biến giao diện
-const DailyReport = ({ propDate, isEmbedded = false }) => {
-  // 2. CẤU HÌNH API (Khớp với @RequestMapping("/dailysummary"))
+const DailyReport = () => {
+  // 2. CẤU HÌNH API
   const API_URL = `${API_BASE_URL}/dailysummary`;
 
   // 3. STATE
-  // Ưu tiên dùng propDate (nếu được nhúng), nếu không thì lấy từ localStorage
-  const initialDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
-  const [selectedDate, setSelectedDate] = useState(propDate || initialDate);
+  // Lấy ngày từ localStorage (Nếu chưa có thì lấy hôm nay)
+  const getInitialDate = () => localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(getInitialDate());
    
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // 🔄 ĐỒNG BỘ: Cập nhật lại ngày khi Calendar (trang cha) truyền xuống ngày mới
-  useEffect(() => {
-    if (propDate) {
-      setSelectedDate(propDate);
-    }
-  }, [propDate]);
-
-  // 4. GỌI API LẤY BÁO CÁO (DailySummary)
+  // --- HÀM LOAD DỮ LIỆU ---
   const fetchReport = () => {
     setLoading(true);
     setSummary(null);
 
-    // Backend: @PostMapping("/{id}") và @RequestBody LocalDate date
+    // Gọi API Backend
     fetch(`${API_URL}/${CURRENT_USER_ID}`, {
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
-      // Backend LocalDate nhận chuỗi "YYYY-MM-DD"
-      // JSON.stringify sẽ biến '2025-12-27' thành '"2025-12-27"' -> Spring Boot hiểu đúng.
       body: JSON.stringify(selectedDate) 
     })
     .then(res => {
       if (!res.ok) {
-        // Nếu ngày đó chưa có dữ liệu (404) hoặc lỗi server (500)
         if (res.status === 404 || res.status === 500) return null; 
         throw new Error("Lỗi kết nối");
       }
@@ -56,42 +46,71 @@ const DailyReport = ({ propDate, isEmbedded = false }) => {
     .finally(() => setLoading(false));
   };
 
-  // Gọi API mỗi khi ngày thay đổi
+  // --- LOGIC ĐỒNG BỘ & TỰ ĐỘNG CẬP NHẬT ---
+  
+  // 1. Load lại khi ngày thay đổi
   useEffect(() => {
     fetchReport();
   }, [selectedDate]);
 
+  // 2. Hàm xử lý khi Widget Lịch thay đổi ngày
+  const handleDateChange = (newDate) => {
+    localStorage.setItem('APP_SELECTED_DATE', newDate);
+    setSelectedDate(newDate); // Cập nhật state -> Trigger useEffect -> Fetch lại dữ liệu
+  };
+
+  // 3. Tự động refresh khi quay lại tab này (Event Focus)
+  useEffect(() => {
+    const onFocus = () => {
+        const currentDate = localStorage.getItem('APP_SELECTED_DATE');
+        if (currentDate && currentDate !== selectedDate) {
+            setSelectedDate(currentDate);
+        } else {
+            fetchReport(); // Force reload để lấy dữ liệu mới nhất
+        }
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [selectedDate]);
+
+
+  // Hàm render số sao rating
+  const renderStars = (rating) => {
+    const stars = [];
+    const score = rating || 0; 
+    for (let i = 1; i <= 5; i++) {
+        if (i <= Math.round(score)) {
+            stars.push(<span key={i} style={{color: '#f1c40f'}}>★</span>);
+        } else {
+            stars.push(<span key={i} style={{color: '#ccc'}}>★</span>);
+        }
+    }
+    return stars;
+  };
+
   return (
-    // Sử dụng class khác nếu được nhúng để tránh xung đột layout (padding, margin)
-    <div className={isEmbedded ? "report-embedded-content" : "page-container"}>
+    <div className="page-container">
       
-      {/* CHỈ HIỂN THỊ HEADER NẾU KHÔNG PHẢI NHÚNG (CHẠY ĐỘC LẬP) */}
-      {!isEmbedded && (
-        <div className="report-header">
-          <h1>📑 Báo Cáo Tổng Hợp Ngày</h1>
-          <input 
-            type="date" 
-            className="date-picker"
-            value={selectedDate} 
-            onChange={(e) => {
-                setSelectedDate(e.target.value);
-                // Cập nhật localStorage để đồng bộ với các trang khác nếu cần
-                localStorage.setItem('APP_SELECTED_DATE', e.target.value);
-            }} 
-          />
-        </div>
-      )}
+      {/* HEADER: Đơn giản, chỉ hiện tiêu đề ngày */}
+      <div className="report-header">
+        <h1>📑 Báo Cáo Ngày ({selectedDate})</h1>
+      </div>
 
-      {loading && <p>Đang tải dữ liệu...</p>}
+      {/* WIDGET LỊCH (Luôn hiển thị ở góc) */}
+      <CalendarPicker onDateSelect={handleDateChange} />
 
+      {/* LOADING */}
+      {loading && <p style={{textAlign:'center', marginTop:'20px'}}>Đang tổng hợp dữ liệu...</p>}
+
+      {/* EMPTY STATE */}
       {!loading && !summary && (
         <div className="empty-state">
-          <p>📭 Chưa có báo cáo tổng kết cho ngày <strong>{selectedDate}</strong>.</p>
-          <small>Hệ thống sẽ tự động tổng hợp khi bạn nhập liệu đầy đủ.</small>
+          <p>📭 Chưa có dữ liệu tổng hợp cho ngày <strong>{selectedDate}</strong>.</p>
+          <small>Dữ liệu sẽ tự động xuất hiện khi bạn thêm Hoạt động hoặc Dinh dưỡng.</small>
         </div>
       )}
 
-      {/* HIỂN THỊ DỮ LIỆU BÁO CÁO */}
+      {/* NỘI DUNG BÁO CÁO */}
       {!loading && summary && (
         <div className="report-content">
           
@@ -101,7 +120,6 @@ const DailyReport = ({ propDate, isEmbedded = false }) => {
             <div className="stats-grid">
               <div className="stat-card green">
                 <span>Nạp vào</span>
-                {/* Dùng Math.round cho Calo để gọn số */}
                 <strong>{Math.round(summary.caloriesConsumed || 0)} kcal</strong>
               </div>
               <div className="stat-card orange">
@@ -147,9 +165,7 @@ const DailyReport = ({ propDate, isEmbedded = false }) => {
             <div className="report-col">
               <h3>⏱️ Thời Gian Hoạt Động</h3>
               <ul className="time-list">
-                {/* Khớp với trường Total_Activity_Time (Float) */}
                 <li>🏃 Vận động thể chất: <strong>{summary.totalActivityTime || 0} phút</strong></li>
-                {/* Khớp với trường Total_Rest_Time (Float) */}
                 <li>🛌 Thời gian nghỉ ngơi: <strong>{summary.totalRestTime || 0} phút</strong></li>
               </ul>
             </div>
@@ -157,10 +173,14 @@ const DailyReport = ({ propDate, isEmbedded = false }) => {
             <div className="report-col">
               <h3>⭐ Đánh Giá Hiệu Suất</h3>
               <div className="rating-box">
-                {/* Khớp với trường Rating (Float) */}
-                <span className="rating-score">{summary.rating || 0}/5</span>
-                {/* Khớp với trường Notes (String) */}
-                <p className="rating-note">"{summary.notes || 'Không có ghi chú đặc biệt'}"</p>
+                <div style={{fontSize: '1.5rem', marginBottom: '5px'}}>
+                    {renderStars(summary.rating)}
+                </div>
+                <span className="rating-score">{summary.rating ? summary.rating.toFixed(1) : 0}/5</span>
+                
+                <p className="rating-note" style={{marginTop: '10px', fontStyle: 'italic', color: '#666'}}>
+                    "{summary.notes || 'Chưa có đánh giá chi tiết'}"
+                </p>
               </div>
             </div>
           </div>

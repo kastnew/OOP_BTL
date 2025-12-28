@@ -32,12 +32,9 @@ const Sidebar = () => {
            🏥 Bệnh án điện tử
         </NavLink> 
         
-        {/* Cập nhật mục Lịch: Đây giờ là nơi xem Báo cáo ngày */}
-        <NavLink to="/calendar" className="menu-item">
-            📅 Báo cáo ngày
+        <NavLink to="/daily-report" className="menu-item">
+            📑 Báo Cáo Ngày
         </NavLink>
-
-        {/* ❌ ĐÃ XÓA MỤC BÁO CÁO NGÀY TẠI ĐÂY ĐỂ TRÁNH DƯ THỪA */}
 
         <NavLink to="/month-report" className="menu-item">
             📅 Báo cáo tháng

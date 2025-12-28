@@ -8,7 +8,7 @@ import Activities from './pages/Activities';
 import Nutrition from './pages/Nutrition';
 import SleepTracker from './pages/SleepTracker';
 import MedicalRecords from './pages/MedicalRecords';
-import Calendar from './pages/Calendar';
+import DailyReport from './pages/DailyReport';
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import MonthReport from "./pages/MonthReport"; 
@@ -56,16 +56,13 @@ function App() {
               <Route path="/activities" element={<Activities />} />
               <Route path="/nutrition" element={<Nutrition />} />
               
-              {/* TRUNG TÂM NHẬT KÝ: Chứa cả Lịch và Báo cáo ngày bên trong */}
-              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/daily-report" element={<DailyReport />} />
 
               <Route path="/sleep" element={<SleepTracker />} />
               <Route path="/medical-records" element={<MedicalRecords />} />
               
               {/* Trang Báo cáo tháng */}
               <Route path="/month-report" element={<MonthReport />} />
-
-              {/* ❌ ĐÃ XÓA: Route "/report" đứng riêng lẻ theo yêu cầu của bạn */}
 
               {/* Fallback: Chuyển hướng về Dashboard nếu gõ sai URL */}
               <Route path="*" element={<Navigate to="/" />} />

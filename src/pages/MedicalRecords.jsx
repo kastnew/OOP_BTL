@@ -1,6 +1,8 @@
 // src/pages/MedicalRecords.jsx
 import React, { useState, useEffect } from 'react';
-import { MOCK_MEDICAL_RECORDS } from '../services/mockData';
+// 1. IMPORT FILE CẤU HÌNH CHUNG
+import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import CalendarPicker from '../components/CalendarPicker'; 
 import './MedicalRecords.css';
 
 const MedicalRecords = () => {
@@ -8,29 +10,68 @@ const MedicalRecords = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // Form data giữ nguyên như cũ
+  // 2. CẤU HÌNH API
+  const MEDICAL_API_URL = `${API_BASE_URL}/medicalrecord`;
+
+  // LẤY NGÀY ĐANG CHỌN TỪ LOCALSTORAGE (Để dùng làm mặc định cho form thêm mới)
+  const currentSelectedDate = localStorage.getItem('APP_SELECTED_DATE') || new Date().toISOString().split('T')[0];
+
+  // Form data
   const [formData, setFormData] = useState({
     diseaseName: '',
     diseaseType: '',
     severity: 'Nhẹ',
     status: 'Đang điều trị',
-    diagnosisDate: '',
+    diagnosisDate: currentSelectedDate, // Mặc định theo ngày chọn
     notes: ''
   });
 
+  // --- 3. LOAD DỮ LIỆU TỪ DB ---
+  const fetchRecords = () => {
+    fetch(`${MEDICAL_API_URL}/${CURRENT_USER_ID}`)
+      .then(res => {
+        if (!res.ok) return []; 
+        return res.json();
+      })
+      .then(data => {
+        // Sắp xếp giảm dần theo ngày (Mới nhất lên đầu)
+        const sortedList = Array.isArray(data) 
+            ? data.sort((a, b) => new Date(b.diagnosisDate) - new Date(a.diagnosisDate)) 
+            : [];
+        setRecords(sortedList);
+      })
+      .catch(err => console.error("Lỗi tải bệnh án:", err));
+  };
+
   useEffect(() => {
-    setRecords(MOCK_MEDICAL_RECORDS);
+    fetchRecords();
   }, []);
 
-  // --- GIỮ NGUYÊN CÁC HÀM LOGIC (Copy từ bài cũ hoặc giữ nguyên nếu chưa xóa) ---
+  // XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH (Chỉ để cập nhật ngày mặc định cho form thêm mới)
+  const handleDateChange = (newDate) => {
+    localStorage.setItem('APP_SELECTED_DATE', newDate);
+    setFormData(prev => ({ ...prev, diagnosisDate: newDate }));
+    // Reload nhẹ để cập nhật state toàn cục (nếu các trang khác cần)
+    window.location.reload(); 
+  };
+
+  // --- CÁC HÀM LOGIC ---
+
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ diseaseName: '', diseaseType: '', severity: 'Nhẹ', status: 'Đang điều trị', diagnosisDate: '', notes: '' });
+    setFormData({ 
+      diseaseName: '', 
+      diseaseType: '', 
+      severity: 'Nhẹ', 
+      status: 'Đang điều trị', 
+      diagnosisDate: currentSelectedDate, // Tự điền ngày đang chọn
+      notes: '' 
+    });
     setShowModal(true);
   };
 
   const handleOpenEdit = (item) => {
-    setEditingId(item.id);
+    setEditingId(item.recordId); 
     setFormData({
       diseaseName: item.diseaseName,
       diseaseType: item.diseaseType,
@@ -49,35 +90,67 @@ const MedicalRecords = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  // --- 4. GỬI DỮ LIỆU ---
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const payload = {
+        userId: CURRENT_USER_ID,
+        ...formData
+    };
+
     if (editingId) {
-      const updatedList = records.map((item) => 
-        item.id === editingId ? { ...item, ...formData } : item
-      );
-      setRecords(updatedList);
+      // SỬA
+      const updatePayload = { ...payload, recordId: editingId };
+      fetch(`${MEDICAL_API_URL}/up`, {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload)
+      }).then(res => {
+        if (res.ok) { fetchRecords(); handleCloseModal(); }
+        else alert("Lỗi cập nhật!");
+      });
+
     } else {
-      const newItem = { id: Date.now(), ...formData };
-      setRecords([...records, newItem]);
+      // THÊM MỚI
+      fetch(`${MEDICAL_API_URL}/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(res => {
+        if (res.ok) { fetchRecords(); handleCloseModal(); }
+        else alert("Lỗi thêm mới!");
+      });
     }
-    handleCloseModal();
   };
 
+  // --- 5. XÓA ---
   const handleDelete = (id) => {
     if (window.confirm("Bạn chắc chắn muốn xóa bệnh án này?")) {
-      setRecords(records.filter(item => item.id !== id));
+      fetch(`${MEDICAL_API_URL}/delete/${id}`, {
+        method: 'GET'
+      }).then(res => {
+        if (res.ok) fetchRecords();
+        else alert("Lỗi xóa!");
+      });
     }
   };
 
   return (
     <div className="page-container">
-      <h1>🏥 Bệnh Án Điện Tử</h1>
+      {/* HEADER: Đơn giản hóa, không còn chức năng click */}
+      <div className="medical-header-top">
+        <h1>🏥 Bệnh Án Điện Tử (Tất cả)</h1>
+      </div>
+
+      {/* ✅ LỊCH WIDGET (Luôn hiển thị) */}
+      <CalendarPicker onDateSelect={handleDateChange} />
 
       <div className="record-list">
         {records.map((item) => (
-          <div key={item.id} className="record-card compact-card">
+          <div key={item.recordId} className="record-card compact-card">
             
-            {/* DÒNG 1: Tên bệnh + Nút Sửa/Xóa (Đã đưa lên đây) */}
+            {/* DÒNG 1: Tên bệnh + Nút Sửa/Xóa */}
             <div className="card-top-row">
               <div className="title-group">
                 <h3>{item.diseaseName}</h3>
@@ -86,7 +159,7 @@ const MedicalRecords = () => {
               
               <div className="action-buttons-top">
                 <button className="btn-icon edit" onClick={() => handleOpenEdit(item)}>✎</button>
-                <button className="btn-icon delete" onClick={() => handleDelete(item.id)}>🗑️</button>
+                <button className="btn-icon delete" onClick={() => handleDelete(item.recordId)}>🗑️</button>
               </div>
             </div>
 
@@ -100,7 +173,7 @@ const MedicalRecords = () => {
               </span>
             </div>
 
-            {/* DÒNG 3: Thông tin chi tiết (Ngày + Ghi chú) */}
+            {/* DÒNG 3: Thông tin chi tiết */}
             <div className="card-details">
               <p className="date-info">📅 {item.diagnosisDate}</p>
               {item.notes && <p className="note-info">📝 {item.notes}</p>}
@@ -108,12 +181,17 @@ const MedicalRecords = () => {
 
           </div>
         ))}
-        {records.length === 0 && <p style={{textAlign: 'center'}}>Chưa có hồ sơ bệnh án nào.</p>}
+        
+        {records.length === 0 && (
+            <p style={{textAlign: 'center', color: '#888', marginTop: '20px'}}>
+                Chưa có hồ sơ bệnh án nào.
+            </p>
+        )}
       </div>
 
       <button className="fab-btn fab-red" onClick={handleOpenAdd}>+</button>
 
-      {/* --- PHẦN MODAL GIỮ NGUYÊN KHÔNG ĐỔI --- */}
+      {/* --- PHẦN MODAL GIỮ NGUYÊN --- */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -133,6 +211,7 @@ const MedicalRecords = () => {
                 </div>
                 <div className="form-group">
                     <label>Ngày chẩn đoán</label>
+                    {/* Input này tự động nhận giá trị ngày đang chọn từ localStorage */}
                     <input type="date" name="diagnosisDate" value={formData.diagnosisDate} onChange={handleInputChange} required />
                 </div>
               </div>

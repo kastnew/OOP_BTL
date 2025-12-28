@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
 import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
-import CalendarPicker from '../components/CalendarPicker'; // (Từ code đồng nghiệp)
+import CalendarPicker from '../components/CalendarPicker'; 
 import './Activities.css';
 
 const Activities = () => {
@@ -11,8 +11,7 @@ const Activities = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // MỚI: State điều khiển Modal Lịch (Từ code đồng nghiệp)
-  const [showCalendar, setShowCalendar] = useState(false);
+  // ❌ ĐÃ XÓA: const [showCalendar, setShowCalendar] ... (Không cần nữa)
 
   // Cấu hình URL
   const ACTIVITIES_API_URL = `${API_BASE_URL}/DailyActivity`; 
@@ -28,20 +27,15 @@ const Activities = () => {
     caloriesBurned: '' 
   });
 
-  // --- HÀM XỬ LÝ THỜI GIAN (GIỮ CỦA BẠN - ĐỂ KHỚP BACKEND) ---
-  
-  // 1. Chuyển chuỗi từ Backend (2025-12-27T08:30:00) thành giờ hiển thị input (08:30)
+  // --- HÀM XỬ LÝ THỜI GIAN ---
   const extractTime = (isoString) => {
     if (!isoString) return '';
     try {
         const timePart = isoString.split('T')[1]; 
-        return timePart.substring(0, 5); // Lấy HH:mm
-    } catch (e) {
-        return '';
-    }
+        return timePart.substring(0, 5); 
+    } catch (e) { return ''; }
   };
 
-  // 2. Gộp Ngày + Giờ để gửi lên Backend (Tạo format LocalDateTime chuẩn: YYYY-MM-DDTHH:mm:ss)
   const combineDateTimeLocal = (dateStr, timeStr) => {
     if (!dateStr || !timeStr) return null;
     return `${dateStr}T${timeStr}:00`; 
@@ -59,16 +53,12 @@ const Activities = () => {
     fetchActivities();
   }, []);
 
-  // --- MỚI: XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH MODAL (Từ code đồng nghiệp) ---
+  // --- XỬ LÝ KHI CHỌN NGÀY TỪ LỊCH WIDGET ---
   const handleDateChange = (newDate) => {
     localStorage.setItem('APP_SELECTED_DATE', newDate);
-    // Cập nhật lại ngày mặc định trong form để khớp với ngày vừa chọn
     setFormData(prev => ({ ...prev, date: newDate }));
-    // Đồng bộ lại dữ liệu (Fetch lại API)
-    // Lưu ý: React state update là bất đồng bộ, nên tốt nhất gọi fetchActivities 
-    // trong useEffect lắng nghe currentSelectedDate, hoặc gọi thủ công ở đây nhưng cần cẩn thận.
-    // Cách tốt nhất là reload trang hoặc trigger useEffect phụ thuộc vào currentSelectedDate (nhưng ở đây ta reload nhẹ).
-    window.location.reload(); // Cách đơn giản nhất để refresh toàn bộ state theo ngày mới
+    // Reload để cập nhật toàn bộ app theo ngày mới
+    window.location.reload(); 
   };
 
   // --- 2. LỌC DỮ LIỆU ---
@@ -80,8 +70,7 @@ const Activities = () => {
     setTotalBurned(total);
   }, [activities, currentSelectedDate]);
 
-  // --- XỬ LÝ FORM ---
-
+  // --- XỬ LÝ FORM (Giữ nguyên) ---
   const handleOpenAdd = () => {
     setEditingId(null);
     setFormData({ 
@@ -115,8 +104,6 @@ const Activities = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Dùng logic của BẠN (combineDateTimeLocal) để khớp Backend
     const payload = {
         userId: CURRENT_USER_ID,
         activityName: formData.activityName,
@@ -127,7 +114,6 @@ const Activities = () => {
     };
 
     if (editingId) {
-      // SỬA (PATCH)
       const updatePayload = { ...payload, activityId: editingId };
       fetch(`${ACTIVITIES_API_URL}/up`, {
         method: 'PATCH',
@@ -137,9 +123,7 @@ const Activities = () => {
         if (res.ok) { fetchActivities(); handleCloseModal(); }
         else console.error("Lỗi update");
       });
-
     } else {
-      // THÊM MỚI (POST)
       fetch(`${ACTIVITIES_API_URL}/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,34 +140,23 @@ const Activities = () => {
       fetch(`${ACTIVITIES_API_URL}/delete/${id}`, { method: 'GET' })
       .then(res => {
         if (res.ok) fetchActivities();
-        else console.error("Lỗi xóa");
       });
     }
   };
 
   return (
     <div className="page-container">
-      {/* 🟢 PHẦN TIÊU ĐỀ TÍCH HỢP MỞ LỊCH (Từ code đồng nghiệp) */}
-      <div 
-        className="activities-header-top" 
-        onClick={() => setShowCalendar(true)}
-        style={{cursor: 'pointer'}}
-        title="Bấm để đổi ngày"
-      >
-        <h1>🏃 Hoạt Động ({currentSelectedDate}) 📅</h1>
+      {/* HEADER: Đã bỏ chức năng bấm vào để mở lịch (Clean hơn) */}
+      <div className="activities-header-top">
+        <h1>🏃 Hoạt Động ({currentSelectedDate})</h1>
         <div className="total-burned-box">
           <span>Đã tiêu hao:</span>
           <strong>-{totalBurned} kcal</strong>
         </div>
       </div>
 
-      {/* 🟢 HIỂN THỊ MODAL LỊCH (Từ code đồng nghiệp) */}
-      {showCalendar && (
-        <CalendarPicker 
-          onDateSelect={handleDateChange} 
-          onClose={() => setShowCalendar(false)} 
-        />
-      )}
+      {/* ✅ LỊCH WIDGET (Luôn hiển thị) */}
+      <CalendarPicker onDateSelect={handleDateChange} />
 
       <div className="activity-list">
         {filteredActivities.map((item) => (

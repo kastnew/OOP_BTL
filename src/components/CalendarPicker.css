@@ -8,29 +8,68 @@
   --today-border: #3498db;
 }
 
+/* --- NÚT FAB LỊCH --- */
+.calendar-fab-btn {
+  position: fixed;
+  bottom: 90px; /* Nằm trên nút Add (thường ở bottom 20-30px) */
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 2000; /* Cao hơn nội dung */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.calendar-fab-btn:hover {
+  transform: scale(1.1);
+  background-color: #edf2f7;
+}
+
+/* --- NÚT HÔM NAY --- */
+.btn-today-sm {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    background: #e1f5fe;
+    color: var(--primary-color);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.btn-today-sm:hover { background: #b3e5fc; }
+
+/* --- CÁC STYLE MODAL GIỮ NGUYÊN NHƯ CŨ --- */
 .calendar-modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 3000;
-  backdrop-filter: blur(8px); /* Tạo hiệu ứng kính mờ hiện đại */
+  backdrop-filter: blur(5px);
 }
 
 .calendar-modal-content {
   background: var(--bg-modal);
-  width: 95%;
-  max-width: 400px;
-  padding: 25px;
-  border-radius: 24px; /* Bo góc cực mềm */
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-  animation: calendarPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  width: 90%;
+  max-width: 380px;
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: calendarPop 0.3s ease-out;
 }
 
 @keyframes calendarPop {
-  from { transform: scale(0.8); opacity: 0; }
+  from { transform: scale(0.9); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
@@ -38,11 +77,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .calendar-modal-header h3 {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: var(--text-main);
   margin: 0;
 }
@@ -51,97 +90,91 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  background: #f8f9fa;
-  padding: 10px 15px;
-  border-radius: 12px;
+  margin-bottom: 15px;
+  background: #f1f2f6;
+  padding: 8px 12px;
+  border-radius: 10px;
 }
 
 .nav-btn {
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
   cursor: pointer;
-  transition: 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
-
-.nav-btn:hover { background: #eee; }
 
 .month-label {
   font-weight: 700;
   color: var(--text-main);
-  font-size: 1.1rem;
 }
 
 .calendar-modal-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 
 .modal-grid-head {
   text-align: center;
   font-weight: 600;
-  font-size: 0.75rem;
-  color: #a0aec0;
-  text-transform: uppercase;
-  padding-bottom: 10px;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  padding-bottom: 5px;
 }
 
 .modal-cell {
-  aspect-ratio: 1 / 1; /* Đảm bảo ô luôn vuông */
+  aspect-ratio: 1 / 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
+  border-radius: 10px;
   cursor: pointer;
   position: relative;
-  transition: all 0.2s ease;
   font-weight: 500;
+  font-size: 0.9rem;
   border: 2px solid transparent;
 }
 
 .modal-cell:hover {
-  background: #edf2f7;
-  transform: translateY(-2px);
+  background: #ecf0f1;
 }
 
 .modal-cell.is-today {
   border-color: var(--today-border);
   color: var(--primary-color);
+  font-weight: bold;
 }
 
 .modal-cell.is-selected {
   background: var(--primary-color) !important;
   color: white !important;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
 }
 
-/* Kiểu dáng cho các chấm dữ liệu */
 .modal-dots {
   display: flex;
   gap: 3px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .m-dot {
-  width: 5px;
-  height: 5px;
+  width: 4px; height: 4px;
   border-radius: 50%;
 }
-
-.dot-act { background: var(--dot-act); box-shadow: 0 0 5px var(--dot-act); }
-.dot-meal { background: var(--dot-meal); box-shadow: 0 0 5px var(--dot-meal); }
+.dot-act { background: var(--dot-act); }
+.dot-meal { background: var(--dot-meal); }
 
 .close-btn {
-  background: #f1f2f6;
+  background: #ecf0f1;
   border: none;
-  width: 30px; height: 30px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   cursor: pointer;
   font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
+  color: #7f8c8d;
 }
+.close-btn:hover { background: #bdc3c7; color: white; }
