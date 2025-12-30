@@ -74,7 +74,7 @@ Thực hiện lần lượt các bước sau:
 Mở Terminal (hoặc Git Bash, CMD) và chạy lệnh:
 ```bash
 git clone https://github.com/kastnew/OOP_BTL.git
-cd OOP_BTLBTL
+cd OOP_BTL
 ```
 ---
 
