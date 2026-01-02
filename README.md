@@ -39,7 +39,7 @@ Dự án này được xây dựng theo mô hình **Client-Server**. Repository 
     * Lưu trữ lịch sử khám bệnh, chẩn đoán và tình trạng điều trị.
 
 6.  **📊 Báo cáo Thông minh (Reports):**
-    * **Báo cáo Ngày:** So sánh Calo Nạp vào vs Tiêu hao, chấm điểm hiệu suất trong ngày (Rating 1-5 sao).
+    * **Báo cáo Ngày:** So sánh Calo Nạp vào vs Tiêu hao, chấm điểm hiệu suất trong ngày (Rating 0-5 sao).
     * **Báo cáo Tháng:** Biểu đồ thống kê cảnh báo sức khỏe và lời khuyên tự động.
 
 7.  **📅 Widget Lịch Thông Minh:**
@@ -94,7 +94,6 @@ Mở file src/utils/config.js trong trình biên tập code (VS Code). Đảm b�
 
 // src/utils/config.js
 export const API_BASE_URL = "http://localhost:8080"; 
-export const CURRENT_USER_ID = 1; // ID người dùng mặc định do chưa phát triển thêm
 ```
 ---
 ### Bước 4: Chạy ứng dụng
