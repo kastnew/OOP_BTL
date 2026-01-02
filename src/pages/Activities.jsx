@@ -1,11 +1,13 @@
 // src/pages/Activities.jsx
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
-import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import { API_BASE_URL, getCurrentUserId } from '../utils/config';
 import CalendarPicker from '../components/CalendarPicker'; 
 import './Activities.css';
 
 const Activities = () => {
+  const CURRENT_USER_ID = getCurrentUserId(); // Lấy ID động từ localStorage
+  
   const [activities, setActivities] = useState([]);
   const [totalBurned, setTotalBurned] = useState(0);
   const [showModal, setShowModal] = useState(false);

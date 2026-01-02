@@ -1,11 +1,13 @@
 // src/pages/DailyReport.jsx
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT CONFIG
-import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import { API_BASE_URL, getCurrentUserId } from '../utils/config';
 import CalendarPicker from '../components/CalendarPicker'; // Widget Lịch nổi
 import './DailyReport.css';
 
 const DailyReport = () => {
+  const CURRENT_USER_ID = getCurrentUserId(); // Lấy ID động từ localStorage
+  
   // 2. CẤU HÌNH API
   const API_URL = `${API_BASE_URL}/dailysummary`;
 

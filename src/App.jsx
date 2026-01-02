@@ -18,10 +18,12 @@ import './App.css';
 function App() {
   // ⭐ STATE AUTH 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    // Kiểm tra ngay khi khởi động app
-    return localStorage.getItem("app_is_auth") === "true";
+    // Kiểm tra cờ auth VÀ phải có user_id (vì backend mới cần ID để gọi API)
+    const isAuth = localStorage.getItem("app_is_auth") === "true";
+    const hasUserId = localStorage.getItem("app_user_id");
+    
+    return isAuth && hasUserId;
   });
- 
  
    return (
     <BrowserRouter>
@@ -32,9 +34,10 @@ function App() {
             path="/login"
             element={<LoginPage setIsAuthenticated={setIsAuthenticated} />}
           />
+          {/* Signup không cần setIsAuthenticated nữa vì đăng ký xong sẽ redirect về Login */}
           <Route
             path="/signup"
-            element={<SignupPage setIsAuthenticated={setIsAuthenticated} />}
+            element={<SignupPage />}
           />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>

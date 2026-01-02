@@ -1,11 +1,12 @@
 // src/pages/SleepTracker.jsx
 import React, { useState, useEffect } from 'react';
 // 1. IMPORT FILE CẤU HÌNH CHUNG
-import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import { API_BASE_URL, getCurrentUserId } from '../utils/config';
 import CalendarPicker from '../components/CalendarPicker'; // ✅ Thêm Component lịch
 import './SleepTracker.css';
 
 const SleepTracker = () => {
+  const CURRENT_USER_ID = getCurrentUserId(); // Lấy ID động từ localStorage
   const [sleepData, setSleepData] = useState([]);
 
   // State điều khiển Modal thêm/sửa

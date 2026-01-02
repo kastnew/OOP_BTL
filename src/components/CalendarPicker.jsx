@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL, CURRENT_USER_ID } from '../utils/config';
+import { API_BASE_URL, getCurrentUserId } from '../utils/config';
 import './CalendarPicker.css';
 
 const CalendarPicker = ({ onDateSelect }) => {
+  const CURRENT_USER_ID = getCurrentUserId(); // Lấy ID động từ localStorage
+  
   // Tự quản lý trạng thái đóng/mở
   const [isOpen, setIsOpen] = useState(false);
 
